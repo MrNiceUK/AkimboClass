@@ -1,5 +1,4 @@
 class X2Ability_AkimboAbilitySet extends X2Ability config(Akimbo);
-//class X2Ability_AkimboAbilitySet extends X2Ability;
 
 var config int GUNKATACHARGE_MAX;
 var config int LAST_ONE_AIM_BONUS;
@@ -8,6 +7,7 @@ var config bool RELOAD_THROW_ANIMATIONS;
 var config int PISTOL_WHIP_MELEE_AIM_BONUS;
 var config bool SINGLE_SHOT_ALWAYS_AVAILABLE;
 var config bool TRICK_SHOT_ONLY_AGAINST_COVER;
+var config bool TRICK_SHOT_USES_SPECIAL_AIM;
 var config int TRICK_SHOT_CRIT_CHANCE_BONUS;
 var config int UNLOAD_COOLDOWN;
 var config int QUICKSILVER_AIN_BONUS;
@@ -16,6 +16,7 @@ var config int ELECTRIFIED_SPIKES_STUN_CHANCE;
 var config int DIRTY_KICK_COOLDOWN;
 var config array<config int> ConsciousChance;
 var config bool ENABLE_GUN_KATA_RETURN_FIRE;	
+var config int OVERWATCH_PACER_TRIGGER;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -25,19 +26,11 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_DP_DualPistols());
 	Templates.AddItem(Create_DP_DualShot());
 	Templates.AddItem(Create_DP_DualShotSecondary());
-
-	if(default.SINGLE_SHOT_ALWAYS_AVAILABLE)	
-	{
-		Templates.AddItem(Create_DP_SingleShotLeft());
-		Templates.AddItem(Create_DP_SingleShotRight());
-	}
-	else 
-	{
-		Templates.AddItem(Create_DP_LastOneRight());
-		Templates.AddItem(Create_DP_LastOneLeft());
-	}
+	Templates.AddItem(Create_DP_SingleShotLeft());
+	Templates.AddItem(Create_DP_SingleShotRight());
 	Templates.AddItem(Create_DP_DualOverwatch());
 	Templates.AddItem(Create_DP_OverwatchPacer());
+	Templates.AddItem(Create_DP_OverwatchPacer_Reset());
 	Templates.AddItem(Create_DP_OverwatchShotRight());
 	Templates.AddItem(Create_DP_OverwatchShotLeft());
 
@@ -47,16 +40,17 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_DP_GunKata_Active());
 	Templates.AddItem(Create_GunKata_Passive());
 
+	Templates.AddItem(Create_DP_SpinningReload_Passive());
 	Templates.AddItem(Create_DP_SpinningReload_Active());
 	Templates.AddItem(Create_DP_SpinningReload_Reactive());
 	Templates.AddItem(Create_DP_SpinningReload_EOT());
 
 	Templates.AddItem(Create_DP_Quicksilver());
 	Templates.AddItem(Create_DP_Unload());
-	
+	Templates.AddItem(Create_DP_UnloadSecondary());
+
 	//	SCRAPPER TREE
 	Templates.AddItem(Create_DP_PistolWhip());
-	//Templates.AddItem(Create_DP_PistolWhip1Tile());
 	Templates.AddItem(Create_DP_PistolWhipSecondary());
 	Templates.AddItem(Create_DP_BonusMeleeAim());
 
@@ -69,18 +63,19 @@ static function array<X2DataTemplate> CreateTemplates()
 	Templates.AddItem(Create_DP_TakeInitiativeStrikeLeft());
 
 	Templates.AddItem(Create_DP_ElectrifiedSpikes());
-
-	Templates.AddItem(Create_DP_DirtyKick());
 	Templates.AddItem(Create_DP_Checkmate());
+
 	Templates.AddItem(Create_DP_LimitBreak());
 	Templates.AddItem(Create_DP_LimitBreak_SelfDamage());
 	Templates.AddItem(Create_DP_LimitBreak_SoakDamage());
 	Templates.AddItem(Create_DP_LimitBreak_DealSoakedDamage());
 
 	//SUPPLEMENTAL
-	Templates.AddItem(Create_DP_HuntersInstinct());
 	Templates.AddItem(Create_DP_LegShot());
-
+	Templates.AddItem(Create_DP_LegShotSecondary());
+	Templates.AddItem(Create_DP_DirtyKick());
+	Templates.AddItem(Create_DP_DirtyKick_Passive());
+	Templates.AddItem(Create_DP_HuntersInstinct());
 	//`Log("IRIDAR Templates created",, 'AkimboClass');
 	//`SYNC_RAND_STATIC(100) returns random number between 0 and 99
 
@@ -130,8 +125,8 @@ static function X2AbilityTemplate Create_DP_DualPistols()	//contains description
 {
 	local X2AbilityTemplate                 Template;
 	local X2Effect_AdditionalAnimSets		AnimSetEffect;
-	local X2Effect_SetUnitValue             UnitValueEffect;
-//	local X2Effect_DualPistolBonus			DPEffect;
+	//local X2Effect_SetUnitValue             UnitValueEffect;
+	//local X2Effect_DualPistolBonus			DPEffect;
 	local X2Effect_DP_CheckmateDamage		CheckmateDamageEffect;
 
 	Template = PurePassive('DP_DualPistols', "img:///WP_Akimbo.UIIcons.DualPistols", false, 'eAbilitySource_Perk');
@@ -145,38 +140,27 @@ static function X2AbilityTemplate Create_DP_DualPistols()	//contains description
 	AnimSetEffect.AddAnimSetWithPath("WP_Akimbo.Anims.AS_Akimbo");
 	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
 	Template.AddTargetEffect(AnimSetEffect);
-
-	UnitValueEffect = new class'X2Effect_SetUnitValue';
+	/*
+	UnitValueEffect = new class'X2Effect_SetUnitValue';	
 	UnitValueEffect.UnitName = class'X2Effect_DP_CycleGuns'.default.NextGunValue;
 	UnitValueEffect.CleanupType = eCleanup_Never;
 	UnitValueEffect.NewValueToSet = 0;
 	Template.AddTargetEffect(UnitValueEffect);
 
 	UnitValueEffect = new class'X2Effect_SetUnitValue';
-	UnitValueEffect.UnitName = class'X2Effect_OverwatchPacer'.default.OverwatchPacerValue;
+	UnitValueEffect.UnitName = 'DP_OverwatchPacerValue';
 	UnitValueEffect.CleanupType = eCleanup_Never;
 	UnitValueEffect.NewValueToSet = 0;
-	Template.AddTargetEffect(UnitValueEffect);
+	Template.AddTargetEffect(UnitValueEffect);*/
 
-	/*
-	DPEffect = new class'X2Effect_DualPistolBonus';
-	DPEffect.BuildPersistentEffect(1, true, false, false);
-	Template.AddTargetEffect(DPEffect);*/
+	//DPEffect = new class'X2Effect_DualPistolBonus';	//have this prepped in case I want Akimbo to have a passive stat bonus
+	//DPEffect.BuildPersistentEffect(1, true);
+	//Template.AddTargetEffect(DPEffect);
 
 	CheckmateDamageEffect = new class'X2Effect_DP_CheckmateDamage';
 	CheckmateDamageEffect.BuildPersistentEffect(1, true, false, false);
 	Template.AddTargetEffect(CheckmateDamageEffect);
 
-	if(default.SINGLE_SHOT_ALWAYS_AVAILABLE)	//these abilities are basically the same, only differences are in localization descriptions
-	{
-		Template.AdditionalAbilities.AddItem('DP_SingleShotLeft');
-		Template.AdditionalAbilities.AddItem('DP_SingleShotRight');
-	}
-	else
-	{
-		Template.AdditionalAbilities.AddItem('DP_LastOneLeft');
-		Template.AdditionalAbilities.AddItem('DP_LastOneRight');
-	}
 	/* Insufficient Ammo
 	Template.AdditionalAbilities.AddItem('ChainShot');
 	Template.AdditionalAbilities.AddItem('HipFireRS');
@@ -184,6 +168,23 @@ static function X2AbilityTemplate Create_DP_DualPistols()	//contains description
 	Template.AdditionalAbilities.AddItem('EMG_DisablingShot');
 	Template.AdditionalAbilities.AddItem('EMG_ShatterShot');
 	*/
+
+	//	Template.AdditionalAbilities.AddItem('DP_TakeInitiativeStrike2');
+	//Template.AdditionalAbilities.AddItem('DP_TakeInitiativeStrikeLeft2');
+
+	//Template.AdditionalAbilities.AddItem('DP_PistolWhip2');
+	//Template.AdditionalAbilities.AddItem('DP_DualShot2');
+
+	Template.AdditionalAbilities.AddItem('DP_DualShot');
+	Template.AdditionalAbilities.AddItem('DP_SingleShotLeft');
+	Template.AdditionalAbilities.AddItem('DP_SingleShotRight');
+
+	Template.AdditionalAbilities.AddItem('DP_DualOverwatch');
+	Template.AdditionalAbilities.AddItem('DP_OverwatchShotRight');
+	Template.AdditionalAbilities.AddItem('DP_OverwatchShotLeft');
+	Template.AdditionalAbilities.AddItem('DP_OverwatchPacer');
+	Template.AdditionalAbilities.AddItem('DP_OverwatchPacer_Reset');
+
 	return Template;
 }
 
@@ -231,97 +232,14 @@ static function X2AbilityTemplate Create_DP_DualShotSecondary()
 	return Template;
 }
 
-static function X2AbilityTemplate Create_DP_DualOverwatch(name TemplateName = 'DP_DualOverwatch')
+static function X2AbilityTemplate Create_DP_DualOverwatch()
 {
 	local X2AbilityTemplate                 Template;	
-	local X2AbilityCost_ActionPoints		ActionPointCost;
-	local X2Effect_DP_ReserveActionPoints	ReserveActionPointsEffect;
-	local array<name>                       SkipExclusions;
-	local X2Effect_CoveringFire             CoveringFireEffect, CoveringFireEffectLeft;
-	local X2Condition_AbilityProperty       CoveringFireCondition;
-	local X2Condition_UnitProperty          ConcealedCondition;
-	local X2Effect_SetUnitValue             UnitValueEffect;
-	local X2Condition_UnitEffects           SuppressedCondition;
 
-	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
-
-	Template.AbilitySourceName = 'eAbilitySource_Default';
-	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
-	Template.IconImage = "img:///WP_Akimbo.UIIcons.DualOverwatch";
-	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.OVERWATCH_PRIORITY;
-	Template.bDisplayInUITooltip = false;
-	Template.bDisplayInUITacticalText = false;
-	Template.bDontDisplayInAbilitySummary = true;
-	Template.AbilityConfirmSound = "Unreal2DSounds_OverWatch";
-	
-	ActionPointCost = new class'X2AbilityCost_ActionPoints';
-	ActionPointCost.bConsumeAllPoints = true;   
-	ActionPointCost.DoNotConsumeAllSoldierAbilities.AddItem('DP_Quicksilver');
-	ActionPointCost.iNumPoints = 1;
-	Template.AbilityCosts.AddItem(ActionPointCost);
-	
-	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
-
-	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName);	//overwatch can be activated while disoriented???
-	Template.AddShooterEffectExclusions(SkipExclusions);
-
-	SuppressedCondition = new class'X2Condition_UnitEffects';
-	SuppressedCondition.AddExcludeEffect(class'X2Effect_Suppression'.default.EffectName, 'AA_UnitIsSuppressed');
-	SuppressedCondition.AddExcludeEffect(class'X2Effect_SkirmisherInterrupt'.default.EffectName, 'AA_AbilityUnavailable');
-	Template.AbilityShooterConditions.AddItem(SuppressedCondition);
-	
-	ReserveActionPointsEffect = new class'X2Effect_DP_ReserveActionPoints';
-	ReserveActionPointsEffect.NumPoints = 2;
-	Template.AddTargetEffect(ReserveActionPointsEffect);
-
-	CoveringFireEffect = new class'X2Effect_CoveringFire';
-	CoveringFireEffect.AbilityToActivate = 'DP_OverwatchShotRight';
-	CoveringFireEffect.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
-	CoveringFireCondition = new class'X2Condition_AbilityProperty';
-	CoveringFireCondition.OwnerHasSoldierAbilities.AddItem('CoveringFire');
-	CoveringFireEffect.TargetConditions.AddItem(CoveringFireCondition);
-	Template.AddTargetEffect(CoveringFireEffect);
-
-	CoveringFireEffectLeft = new class'X2Effect_CoveringFire';
-	CoveringFireEffectLeft.AbilityToActivate = 'DP_OverwatchShotLeft';
-	CoveringFireEffectLeft.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
-	CoveringFireCondition = new class'X2Condition_AbilityProperty';
-	CoveringFireCondition.OwnerHasSoldierAbilities.AddItem('CoveringFire');
-	CoveringFireEffectLeft.TargetConditions.AddItem(CoveringFireCondition);
-	Template.AddTargetEffect(CoveringFireEffectLeft);
-
-	ConcealedCondition = new class'X2Condition_UnitProperty';
-	ConcealedCondition.ExcludeFriendlyToSource = false;
-	ConcealedCondition.IsConcealed = true;
-
-	UnitValueEffect = new class'X2Effect_SetUnitValue';
-	UnitValueEffect.UnitName = class'X2Ability_DefaultAbilitySet'.default.ConcealedOverwatchTurn;
-	UnitValueEffect.CleanupType = eCleanup_BeginTurn;
-	UnitValueEffect.NewValueToSet = 1;
-	UnitValueEffect.TargetConditions.AddItem(ConcealedCondition);
-	Template.AddTargetEffect(UnitValueEffect);
-
-	Template.AbilityToHitCalc = default.DeadEye;
-	Template.AbilityTargetStyle = default.SelfTarget;
-	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
-
-	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	Template.BuildVisualizationFn = class'X2Ability_DefaultAbilitySet'.static.OverwatchAbility_BuildVisualization;
-	Template.CinescriptCameraType = "Overwatch";
-
-	Template.Hostility = eHostility_Defensive;
-
-	Template.DefaultKeyBinding = class'UIUtilities_Input'.const.FXS_KEY_Y;
-	Template.bNoConfirmationWithHotKey = true;
-
-	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
+	Template = class'X2Ability_AkimboAbilitySet'.static.Create_DP_DualOverwatch_Template('DP_DualOverwatch');
 
 	Template.OverrideAbilities.AddItem('PistolOverwatch');	//base game ability
 	Template.bOverrideWeapon = true;
-
-	Template.AdditionalAbilities.AddItem('DP_OverwatchPacer');
-	Template.AdditionalAbilities.AddItem('DP_OverwatchShotRight');
-	Template.AdditionalAbilities.AddItem('DP_OverwatchShotLeft');
 
 	return Template;
 }
@@ -331,13 +249,12 @@ static function X2AbilityTemplate Create_DP_OverwatchPacer()	//This ability trig
 	local X2AbilityTemplate                 Template;
 	local X2AbilityTrigger_EventListener	Trigger;
 	local array<name>                       SkipExclusions;
-	local X2Effect_OverwatchPacer			OverwatchPacer;
+	local X2Effect_IncrementUnitValue		PacerValue;
 	local X2AbilityTarget_Single			SingleTarget;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'DP_OverwatchPacer');
 
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
-	Template.AbilitySourceName = 'eAbilitySource_Perk';
 
     SingleTarget = new class'X2AbilityTarget_Single';
 	SingleTarget.OnlyIncludeTargetsInsideWeaponRange = true;
@@ -367,9 +284,11 @@ static function X2AbilityTemplate Create_DP_OverwatchPacer()	//This ability trig
 	Trigger.ListenerData.EventFn = class'XComGameState_Ability'.static.TypicalAttackListener;
 	Template.AbilityTriggers.AddItem(Trigger);
 
-	OverwatchPacer = new class 'X2Effect_OverwatchPacer';
-	OverwatchPacer.UseOverwatchPacerMaster = false;
-	Template.AddShooterEffect(OverwatchPacer);
+	PacerValue = new class'X2Effect_IncrementUnitValue';
+	PacerValue.NewValueToSet = 1;	//NewValueToSet is actually "how much to add"
+	PacerValue.UnitName = 'DP_OverwatchPacerValue';
+	PacerValue.CleanupType = eCleanup_BeginTurn;
+	Template.AddShooterEffect(PacerValue);
 
 	Template.bSkipExitCoverWhenFiring  = true;
 	Template.bShowActivation = false;
@@ -378,16 +297,60 @@ static function X2AbilityTemplate Create_DP_OverwatchPacer()	//This ability trig
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn =  none;
 
+	Template.PostActivationEvents.AddItem('DP_OverwatchPacer_Reset');
+
 	return Template;
 }
+
+
+static function X2AbilityTemplate Create_DP_OverwatchPacer_Reset()	//this ability gets triggered after every Overwatch Pacer tick. 
+{																	//It checks whether we have accumulated enough ticks, and if we have - resets them to zero.
+	local X2AbilityTemplate					Template;
+	local X2AbilityTrigger_EventListener    Trigger;
+	local X2Condition_UnitValue				OverwatchPacerCondition;
+	local X2Effect_SetUnitValue             UnitValueEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'DP_OverwatchPacer_Reset');
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.ConcealmentRule = 	eConceal_Always;            //  Always retain Concealment
+	Template.Hostility = eHostility_Neutral;
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	Template.bSkipExitCoverWhenFiring  = true;
+	Template.bShowActivation = false;
+	Template.bSkipFireAction = true;
+
+	Trigger = new class'X2AbilityTrigger_EventListener';
+	Trigger.ListenerData.Deferral = ELD_OnStateSubmitted;
+	Trigger.ListenerData.EventID = 'DP_OverwatchPacer_Reset';
+	Trigger.ListenerData.Filter = eFilter_Unit;
+	Trigger.ListenerData.EventFn = class'XComGameState_Ability'.static.AbilityTriggerEventListener_OriginalTarget;
+	Template.AbilityTriggers.AddItem(Trigger);
+
+	OverwatchPacerCondition = new class'X2Condition_UnitValue';
+	OverwatchPacerCondition.AddCheckValue('DP_OverwatchPacerValue', default.OVERWATCH_PACER_TRIGGER, eCheck_GreaterThan);
+	Template.AbilityShooterConditions.AddItem(OverwatchPacerCondition);
+
+	UnitValueEffect = new class'X2Effect_SetUnitValue';	
+	UnitValueEffect.UnitName = 'DP_OverwatchPacerValue';
+	UnitValueEffect.CleanupType = eCleanup_BeginTurn;
+	UnitValueEffect.NewValueToSet = 0;				
+	Template.AddTargetEffect(UnitValueEffect);
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+
+	return Template;
+}
+
 
 static function X2AbilityTemplate Create_DP_OverwatchShotRight(name TemplateName = 'DP_OverwatchShotRight', string Hand = "Right")	
 {
 	local X2AbilityTemplate                 Template;
 	local X2AbilityCost_ReserveActionPoints ReserveActionPointCost;
 	local X2AbilityTrigger_EventListener	Trigger;
-	local X2Effect_OverwatchPacer			OverwatchPacer;
-	local X2Condition_OverwatchPacer		OverwatchPacerCondition;
+	local X2Condition_UnitValue				OverwatchPacerCondition;
+	local X2Effect_IncrementUnitValue		PacerValue;
 	local X2Condition_UnitEffects			SuppressedCondition;
 	local X2Condition_Visibility			TargetVisibilityCondition;
 	local X2Condition_UnitProperty			ShooterCondition;
@@ -409,14 +372,15 @@ static function X2AbilityTemplate Create_DP_OverwatchShotRight(name TemplateName
 	Template.DisplayTargetHitChance = false;
 	Template.bDontDisplayInAbilitySummary = true;
 
-	OverwatchPacer = new class'X2Effect_OverwatchPacer';	//reset the pacer to force a time period between multiple overwatch shots
-	OverwatchPacer.UseOverwatchPacerMaster = true;
-	OverwatchPacer.OverwatchPacerMaster = 0;
-	OverwatchPacer.bApplyOnMiss = true;
-	Template.AddShooterEffect(OverwatchPacer);
-
-	OverwatchPacerCondition = new class'X2Condition_OverwatchPacer';	//fire only when overwatch pacer is stacked high enough
+	OverwatchPacerCondition = new class'X2Condition_UnitValue';	//fire only when overwatch pacer is reset to zero
+	OverwatchPacerCondition.AddCheckValue('DP_OverwatchPacerValue', 0, eCheck_Exact);
 	Template.AbilityShooterConditions.AddItem(OverwatchPacerCondition);
+	
+	PacerValue = new class'X2Effect_IncrementUnitValue';	//upon firing, increment the value to prevent other shots from firing until pacer is reset again
+	PacerValue.NewValueToSet = 1;	//NewValueToSet is actually "how much to add"
+	PacerValue.UnitName = 'DP_OverwatchPacerValue';
+	PacerValue.CleanupType = eCleanup_BeginTurn;
+	Template.AddShooterEffect(PacerValue);
 
 	ShooterCondition = new class'X2Condition_UnitProperty';	//doesn't trigger while concealed
 	ShooterCondition.ExcludeConcealed = true;
@@ -467,6 +431,7 @@ static function X2AbilityTemplate Create_DP_SingleShotRight(name TemplateName = 
 {																//this ability becomes visible and available only when the player has exactly 1 ammo remaining
 	local X2AbilityTemplate                 Template;	
 	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2Condition_DP_AmmoCondition		AmmoCondition;
 
 	Template = class'X2Ability_AkimboAbilitySet'.static.SingleShot(TemplateName, Hand);
 
@@ -474,7 +439,7 @@ static function X2AbilityTemplate Create_DP_SingleShotRight(name TemplateName = 
 	X2AbilityToHitCalc_StandardAim(Template.AbilityToHitCalc).BuiltInCritMod = default.LAST_ONE_CRIT_BONUS;
 
 	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_standardpistol";	// Icon Properties
-	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_ShowIfAvailableOrNoTargets;
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_ShowIfAvailable;
 
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 
@@ -484,6 +449,13 @@ static function X2AbilityTemplate Create_DP_SingleShotRight(name TemplateName = 
 	ActionPointCost.DoNotConsumeAllSoldierAbilities.AddItem('DP_BulletTime');
 	Template.AbilityCosts.AddItem(ActionPointCost);	
 
+	if(!default.SINGLE_SHOT_ALWAYS_AVAILABLE)	
+	{
+		AmmoCondition = new class'X2Condition_DP_AmmoCondition';	
+		AmmoCondition.ExactMatch = true;
+		AmmoCondition.iAmmo = 1;
+		Template.AbilityShooterConditions.AddItem(AmmoCondition);
+	}
 	return Template;	
 }
 
@@ -492,31 +464,6 @@ static function X2AbilityTemplate Create_DP_SingleShotLeft()
 	local X2AbilityTemplate                 Template;	
 
 	Template = class'X2Ability_AkimboAbilitySet'.static.Create_DP_SingleShotRight('DP_SingleShotLeft', "Left");
-
-	return Template;	
-}
-
-static function X2AbilityTemplate Create_DP_LastOneRight(name TemplateName = 'DP_LastOneRight', string Hand = "Right")	//same abilities, different localization
-{
-	local X2AbilityTemplate                 Template;	
-	local X2Condition_DP_AmmoCondition		AmmoCondition;
-
-	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
-	AmmoCondition = new class'X2Condition_DP_AmmoCondition';	
-	AmmoCondition.ExactMatch = true;
-	AmmoCondition.iAmmo = 1;
-	Template.AbilityShooterConditions.AddItem(AmmoCondition);
-
-	Template = class'X2Ability_AkimboAbilitySet'.static.Create_DP_SingleShotRight(TemplateName, Hand);
-
-	return Template;	
-}
-
-static function X2AbilityTemplate Create_DP_LastOneLeft()
-{
-	local X2AbilityTemplate                 Template;	
-
-	Template = class'X2Ability_AkimboAbilitySet'.static.Create_DP_LastOneRight('DP_LastOneLeft', "Left");
 
 	return Template;	
 }
@@ -532,7 +479,7 @@ static function X2AbilityTemplate Create_DP_TrickShot()
 	local X2AbilityTemplate                 Template;
 	local X2AbilityCost_ActionPoints		ActionPointCost;
 	local X2Condition_UnitEffects			SuppressedCondition;
-	local X2AbilityToHitCalc_TrickShot		ToHitCalc;
+	local X2AbilityToHitCalc_TrickShot		SpecialToHitCalc;
 	local X2Condition_DP_TrickShot			TrickShotCondition;
 
 	Template = class'X2Ability_AkimboAbilitySet'.static.SingleShot('DP_TrickShot', "DualRight");
@@ -543,11 +490,18 @@ static function X2AbilityTemplate Create_DP_TrickShot()
 	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_CORPORAL_PRIORITY;
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 
-	ToHitCalc = new class'X2AbilityToHitCalc_TrickShot';	//custom aim table
-	ToHitCalc.bAllowCrit = true;
-	ToHitCalc.BuiltInCritMod = default.TRICK_SHOT_CRIT_CHANCE_BONUS;
-	ToHitCalc.bIgnoreCoverBonus = true;
-	Template.AbilityToHitCalc = ToHitCalc;
+	X2AbilityToHitCalc_StandardAim(Template.AbilityToHitCalc).bAllowCrit = true;
+	X2AbilityToHitCalc_StandardAim(Template.AbilityToHitCalc).BuiltInCritMod = default.TRICK_SHOT_CRIT_CHANCE_BONUS;
+	X2AbilityToHitCalc_StandardAim(Template.AbilityToHitCalc).bIgnoreCoverBonus = true;
+	
+	if(default.TRICK_SHOT_USES_SPECIAL_AIM)	//not sure this works
+	{
+		SpecialToHitCalc = new class'X2AbilityToHitCalc_TrickShot';	//custom aim table - does not benefit from weapon range bonuses
+		SpecialToHitCalc.bAllowCrit = true;
+		SpecialToHitCalc.BuiltInCritMod = default.TRICK_SHOT_CRIT_CHANCE_BONUS;
+		SpecialToHitCalc.bIgnoreCoverBonus = true;
+		Template.AbilityToHitCalc = SpecialToHitCalc;
+	}
 
 	ActionPointCost = new class'X2AbilityCost_ActionPoints';
 	ActionPointCost.iNumPoints = 1;
@@ -585,7 +539,7 @@ static function X2AbilityTemplate Create_DP_GunKata_Active()	//this ability does
 	local X2AbilityTemplate                 Template;
 	local X2Effect_DP_ReserveActionPoints   ReserveActionPointsEffect;
 
-	Template = class'X2Ability_AkimboAbilitySet'.static.Create_DP_DualOverwatch('DP_GunKata_Active');
+	Template = class'X2Ability_AkimboAbilitySet'.static.Create_DP_DualOverwatch_Template('DP_GunKata_Active');
 	Template.bDisplayInUITooltip = true;
 	Template.bDisplayInUITacticalText = true;
 	Template.bDontDisplayInAbilitySummary = false;
@@ -601,9 +555,8 @@ static function X2AbilityTemplate Create_DP_GunKata_Active()	//this ability does
 	AnimSetEffect.BuildPersistentEffect(1, false, false, false);
 	AnimSetEffect.EffectName = 'AS_GunKata';
 	Template.AddTargetEffect(AnimSetEffect);*/
-
-
 	Template.OverrideAbilities.AddItem('DP_DualOverwatch');
+	Template.OverrideAbilities.AddItem('Overwatch');		//override vanilla overwatch for primary weapons to make it compatible with RPGO
 	Template.AdditionalAbilities.AddItem('GunKata_Passive');
 
 	return Template;
@@ -660,6 +613,46 @@ static function X2AbilityTemplate Create_GunKata_Passive()
 	return Template;
 }
 
+static function X2AbilityTemplate Create_DP_SpinningReload_Passive()	//this ability exists just to have an icon in lower left corner of the tactical to remind the soldier has Spinning Reload
+{
+	local X2AbilityTemplate                 Template;
+	local X2Effect_Persistent               Effect;
+	local X2Effect_AdditionalAnimSets		AnimSetEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'DP_SpinningReload_Passive');
+
+	Template.AbilitySourceName = 'eAbilitySource_Perk';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Neutral;
+	Template.IconImage = "img:///WP_Akimbo.UIIcons.SpinningReload";
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	Effect = new class'X2Effect_Persistent';
+	Effect.EffectName = 'SpinningReload';
+	Effect.DuplicateResponse = eDupe_Ignore;
+	Effect.BuildPersistentEffect(1, true, false);
+	Effect.SetDisplayInfo(ePerkBuff_Passive, Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage,,,Template.AbilitySourceName);
+	Template.AddTargetEffect(Effect);
+
+	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
+	AnimSetEffect.AddAnimSetWithPath("WP_OffhandPistol_CV.Anims.AS_SpinningReload");	//have to add an animset to make Spinning Reload play its animation even with other classes
+	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
+	Template.AddTargetEffect(AnimSetEffect);
+
+	Template.bCrossClassEligible = true; //makes this ability available to other classes as an AWC perk. 
+
+	Template.AdditionalAbilities.AddItem('DP_SpinningReload_EOT');
+	Template.AdditionalAbilities.AddItem('DP_SpinningReload_Reactive');
+	Template.AdditionalAbilities.AddItem('DP_SpinningReload_Active');
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+
+	return Template;
+}
+
 static function X2AbilityTemplate Create_DP_SpinningReload_Active()
 {
 	local X2AbilityTemplate                 Template;
@@ -684,10 +677,8 @@ static function X2AbilityTemplate Create_DP_SpinningReload_Active()
 	DPReload = new class 'X2Effect_DPReloadEffect';
 	Template.AddShooterEffect(DPReload);
 
-	AmmoCondition = new class'X2Condition_DP_AmmoCondition';	//
-	AmmoCondition.WantsReload = true;
-	AmmoCondition.CheckQuicksilver = true;
-	AmmoCondition.ExactMatch = false;
+	AmmoCondition = new class'X2Condition_DP_AmmoCondition';	
+	AmmoCondition.ForSpinningReload = true;
 	Template.AbilityShooterConditions.AddItem(AmmoCondition);
 
     Template.AbilityTargetStyle = default.SelfTarget;
@@ -709,7 +700,6 @@ static function X2AbilityTemplate Create_DP_SpinningReload_Active()
 	//else Template.CustomFireAnim = 'HL_Reload';
 
 	Template.CustomFireAnim = 'HL_SpinningReload';
-	//Template.CustomFireAnim = 'AkimboClassIntro_backup';
 
 	Template.ActivationSpeech = 'Reloading';
 	Template.CinescriptCameraType = "GenericAccentCam";
@@ -718,19 +708,19 @@ static function X2AbilityTemplate Create_DP_SpinningReload_Active()
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
-	Template.OverrideAbilityAvailabilityFn = Reload_OverrideAbilityAvailability;
-
-	Template.AdditionalAbilities.AddItem('DP_SpinningReload_EOT');
-	Template.AdditionalAbilities.AddItem('DP_SpinningReload_Reactive');
+	Template.OverrideAbilityAvailabilityFn = DP_Reload_OverrideAbilityAvailability;
 
 	return Template;
 }
 
-function Reload_OverrideAbilityAvailability(out AvailableAction Action, XComGameState_Ability AbilityState, XComGameState_Unit OwnerState)
+function DP_Reload_OverrideAbilityAvailability(out AvailableAction Action, XComGameState_Ability AbilityState, XComGameState_Unit OwnerState)
 {
+	local XComGameState_Item PrimaryWeapon;
+
 	if (Action.AvailableCode == 'AA_Success')
 	{
-		if (AbilityState.GetSourceWeapon().Ammo == 0)
+		PrimaryWeapon = OwnerState.GetItemInSlot(eInvSlot_PrimaryWeapon);
+		if (PrimaryWeapon.Ammo == 0)
 			Action.ShotHUDPriority = class'UIUtilities_Tactical'.const.MUST_RELOAD_PRIORITY;
 	}
 }
@@ -742,8 +732,8 @@ static function X2AbilityTemplate Create_DP_SpinningReload_Reactive()
 	local X2AbilityTrigger_EventListener	Trigger;
 	local X2AbilityTrigger_EventListener	TurnEndTrigger;
 	local X2Condition_DP_AmmoCondition		AmmoCondition;
-	local X2Effect_OverwatchPacer			OverwatchPacer;
-	local X2Condition_OverwatchPacer		OverwatchPacerCondition;
+	local X2Condition_UnitValue            OverwatchPacerCondition;
+	local X2Effect_IncrementUnitValue		PacerValue;
 	local X2AbilityCost_ReserveActionPoints ReserveActionPointCost;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'DP_SpinningReload_Reactive');
@@ -754,7 +744,8 @@ static function X2AbilityTemplate Create_DP_SpinningReload_Reactive()
 	Template.AbilityToHitCalc = default.DeadEye;
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);	
 
-	AmmoCondition = new class'X2Condition_DP_AmmoCondition';	//this makes the ability trigger only when soldier has no ammo at all					
+	AmmoCondition = new class'X2Condition_DP_AmmoCondition';	//this makes the ability trigger only when soldier has no ammo at all	
+	AmmoCondition.NeedsReload = true;				
 	Template.AbilityShooterConditions.AddItem(AmmoCondition);
 
 	ReserveActionPointCost = new class'X2AbilityCost_ReserveActionPoints';
@@ -763,13 +754,14 @@ static function X2AbilityTemplate Create_DP_SpinningReload_Reactive()
 	ReserveActionPointCost.AllowedTypes.AddItem(class'X2CharacterTemplateManager'.default.OverwatchReserveActionPoint);
 	Template.AbilityCosts.AddItem(ReserveActionPointCost);
 
-	OverwatchPacer = new class'X2Effect_OverwatchPacer';
-	OverwatchPacer.UseOverwatchPacerMaster = true;
-	OverwatchPacer.OverwatchPacerMaster = 0;
-	OverwatchPacer.bApplyOnMiss = true;
-	Template.AddShooterEffect(OverwatchPacer);
+	PacerValue = new class'X2Effect_IncrementUnitValue';
+	PacerValue.NewValueToSet = 1;	//NewValueToSet is actually "how much to add"
+	PacerValue.UnitName = 'DP_OverwatchPacerValue';
+	PacerValue.CleanupType = eCleanup_BeginTurn;
+	Template.AddShooterEffect(PacerValue);
 
-	OverwatchPacerCondition = new class'X2Condition_OverwatchPacer';
+	OverwatchPacerCondition = new class'X2Condition_UnitValue';
+	OverwatchPacerCondition.AddCheckValue('DP_OverwatchPacerValue', 0, eCheck_Exact);
 	Template.AbilityShooterConditions.AddItem(OverwatchPacerCondition);
 
 	Trigger = new class'X2AbilityTrigger_EventListener';	//  trigger on movement
@@ -815,8 +807,8 @@ static function X2AbilityTemplate Create_DP_SpinningReload_Reactive()
 	return Template;
 }
 
-static function X2AbilityTemplate Create_DP_SpinningReload_EOT() 
-{																 
+static function X2AbilityTemplate Create_DP_SpinningReload_EOT() //This ability is the auotomatic reload that triggers at the beginning of player's turn
+{																//if there are still some Overwatch Action Points remaining from the previous turn
 	local X2AbilityTemplate                 Template;
 	local X2Effect_DPReloadEffect			DPReload;
 	local X2AbilityTrigger_EventListener	Trigger;
@@ -843,7 +835,7 @@ static function X2AbilityTemplate Create_DP_SpinningReload_EOT()
 	AmmoCondition.WantsReload = true;
 	Template.AbilityShooterConditions.AddItem(AmmoCondition);
 
-	Trigger = new class'X2AbilityTrigger_EventListener';		//this event fires when charges are removed at the beginning of new turn
+	Trigger = new class'X2AbilityTrigger_EventListener';	
 	Trigger.ListenerData.EventID = 'PlayerTurnBegun';
 	Trigger.ListenerData.Deferral = ELD_OnStateSubmitted;
 	Trigger.ListenerData.Filter = eFilter_Player;
@@ -944,14 +936,10 @@ static function X2AbilityTemplate Create_DP_Unload()
 static function X2AbilityTemplate Create_DP_UnloadSecondary()	
 {
 	local X2AbilityTemplate                 Template;
-	local X2Effect_Shredder			        WeaponDamageEffect;
 	local X2AbilityMultiTarget_BurstFire    BurstFireMultiTarget;
 	local X2AbilityTrigger_EventListener	AbilityTrigger;
 
 	Template = class'X2Ability_AkimboAbilitySet'.static.SingleShot('DP_UnloadSecondary', "DualLeft");
-
-	WeaponDamageEffect = new class'X2Effect_Shredder';
-	Template.AddMultiTargetEffect(WeaponDamageEffect);
 	
 	BurstFireMultiTarget = new class'X2AbilityMultiTarget_BurstFire';
 	BurstFireMultiTarget.NumExtraShots = 2;
@@ -978,6 +966,10 @@ static function X2AbilityTemplate Create_DP_PistolWhip()
 {
 	local X2AbilityTemplate                 Template;
 	local X2AbilityCost_ActionPoints        ActionPointCost;
+	//just testing
+	//local X2Effect_Persistent				UnconsciousEffect;
+	//local X2Effect_Knockback				KnockbackEffect;
+	//end of testing
 
 	Template = class'X2Ability_AkimboAbilitySet'.static.PistolWhip('DP_PistolWhip', "DualRight");
 
@@ -993,48 +985,34 @@ static function X2AbilityTemplate Create_DP_PistolWhip()
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);
 
+	Template.DamagePreviewFn = PistolWhipDamagePreview;
+
+	// just testing
+	/*
+	Template.CustomFireAnim = 'MV_Dive2CoverA';
+	Template.CustomFireKillAnim = 'MV_Dive2CoverA';
+	Template.CustomMovingFireAnim = 'MV_Dive2CoverA';
+	Template.CustomMovingFireKillAnim = 'MV_Dive2CoverA';
+	Template.CustomMovingTurnLeftFireAnim = 'MV_Dive2CoverA';
+	Template.CustomMovingTurnLeftFireKillAnim = 'MV_Dive2CoverA';
+	Template.CustomMovingTurnRightFireAnim = 'MV_Dive2CoverA';
+	Template.CustomMovingTurnRightFireKillAnim = 'MV_Dive2CoverA';
+
+	UnconsciousEffect = class'X2StatusEffects'.static.CreateUnconsciousStatusEffect();
+	UnconsciousEffect.bRemoveWhenSourceDies = false;
+	Template.AddTargetEffect(UnconsciousEffect);
+
+	KnockbackEffect = new class'X2Effect_Knockback';
+	KnockbackEffect.KnockbackDistance = 1;
+	KnockbackEffect.OnlyOnDeath = false;
+	Template.AddTargetEffect(KnockbackEffect);*/
+	//end of testing
+
 	Template.AdditionalAbilities.AddItem('DP_BonusMeleeAim');
-	Template.AdditionalAbilities.AddItem('DP_PistolWhip1Tile');
 	Template.AdditionalAbilities.AddItem('DP_PistolWhipSecondary');
+
 	Template.PostActivationEvents.AddItem('DP_PistolWhipSecondary');
-
-	Template.DamagePreviewFn = PistolWhipDamagePreview;
-	
-	Template.AdditionalAbilities.AddItem('DP_TakeInitiativeStrike');
-	Template.AdditionalAbilities.AddItem('DP_TakeInitiativeStrikeLeft');
 	Template.PostActivationEvents.AddItem('DP_TakeInitiativeStrike');
-
-	return Template;
-}
-
-static function X2AbilityTemplate Create_DP_PistolWhip1Tile()
-{
-	local X2AbilityTemplate                 Template;
-	local X2AbilityCost_ActionPoints        ActionPointCost;
-	local X2Condition_UnitProperty			AdjacencyCondition;	
-
-	Template = class'X2Ability_AkimboAbilitySet'.static.PistolWhip('DP_PistolWhip1Tile', "DualRight");
-
-	Template.AbilitySourceName = 'eAbilitySource_Perk';
-	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_ShowIfAvailable;
-	Template.IconImage = "img:///WP_Akimbo.UIIcons.PistolWhip";
-
-	ActionPointCost = new class'X2AbilityCost_ActionPoints';
-	ActionPointCost.iNumPoints = 1;
-	ActionPointCost.bConsumeAllPoints = false;
-	Template.AbilityCosts.AddItem(ActionPointCost);
-	
-	Template.AbilityTargetStyle = default.SimpleSingleMeleeTarget;
-	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
-
-	AdjacencyCondition = new class'X2Condition_UnitProperty'; // Target Conditions - can target enemies within 1.5 tiles
-	AdjacencyCondition.RequireWithinRange = true;
-	AdjacencyCondition.WithinRange = 144; //1.5 tiles in Unreal units, allows attacks on the diag
-	Template.AbilityTargetConditions.AddItem(AdjacencyCondition);
-
-	Template.DamagePreviewFn = PistolWhipDamagePreview;
-
-	Template.PostActivationEvents.AddItem('DP_PistolWhipSecondary'); 
 
 	return Template;
 }
@@ -1059,8 +1037,8 @@ static function X2AbilityTemplate Create_DP_PistolWhipSecondary()
 static function X2AbilityTemplate Create_DP_BonusMeleeAim()
 {
 	local X2AbilityTemplate						Template;
-	local X2Effect_BonusWeaponDamage            DamageEffect;
 	local X2Effect_ToHitModifier                HitModEffect;
+	local X2Effect_DP_PistolWhipCost			DPEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'DP_BonusMeleeAim');
 	Template.IconImage = "img:///WP_Akimbo.UIIcons.PistolWhip";
@@ -1073,11 +1051,17 @@ static function X2AbilityTemplate Create_DP_BonusMeleeAim()
 	Template.AbilityTargetStyle = default.SelfTarget;
 	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
 
+	Template.AbilityShooterConditions.AddItem(new class'X2Condition_DP_DualPistols');
+
 	HitModEffect = new class'X2Effect_ToHitModifier';
 	HitModEffect.AddEffectHitModifier(eHit_Success, default.PISTOL_WHIP_MELEE_AIM_BONUS, Template.LocFriendlyName, , true, false, true, true);
 	HitModEffect.BuildPersistentEffect(1, true, false, false);
 	HitModEffect.EffectName = 'PistolWhipAim';
 	Template.AddTargetEffect(HitModEffect);
+
+	DPEffect = new class'X2Effect_DP_PistolWhipCost';	//this effect makes Pistol Whip not consume all action points when used against enemy within 1 tile
+	DPEffect.BuildPersistentEffect(1, true);
+	Template.AddTargetEffect(DPEffect);
 
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 
@@ -1331,10 +1315,9 @@ static function X2AbilityTemplate Create_DP_CQCSupremacyAttackSecondary()
 	return Template;
 }
 
-static function X2AbilityTemplate  Create_DP_ElectrifiedSpikes()
-{
+static function X2AbilityTemplate  Create_DP_ElectrifiedSpikes()	//this perk doesn't do anything by itself. 
+{																	//Pistol Whip melee attack template tries to apply DP_ElectrifiedSpikes effect, which won't do anything unless the soldier has this perk
 	local X2AbilityTemplate                 Template;
-	local X2AbilityTrigger_EventListener	AbilityTrigger;
 
 	Template = PurePassive('DP_ElectrifiedSpikes', "img:///WP_Akimbo.UIIcons.ElectrifiedSpikes", false, 'eAbilitySource_Perk', true);
 
@@ -1452,6 +1435,7 @@ static function X2AbilityTemplate Create_DP_Checkmate()
 	Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);
 	// Can't shoot while dead
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+	Template.AbilityShooterConditions.AddItem(new class'X2Condition_DP_DualPistols');
 	
 	WeaponDamageEffect = new class'X2Effect_Shredder';	//bonus damage is handled by always active persistent effect DP_CheckmateDamage
 	WeaponDamageEffect.bAllowFreeKill = true;	//allow Repeater instakill
@@ -1504,7 +1488,7 @@ static function X2AbilityTemplate Create_DP_LimitBreak()
 	Template.AbilityTargetStyle = default.SelfTarget;
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 
-	ActionPointCost = new class'X2AbilityCost_QuickdrawActionPoints';
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
 	ActionPointCost.iNumPoints = 1;
 	ActionPointCost.bConsumeAllPoints = true;
 	Template.AbilityCosts.AddItem(ActionPointCost);	
@@ -1531,6 +1515,8 @@ static function X2AbilityTemplate Create_DP_LimitBreak()
 	Template.bSkipFireAction = true;
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;	
+
+	Template.bCrossClassEligible = true;	//makes this ability available to all classes as an AWC perk
 
 	Template.AdditionalAbilities.AddItem('DP_LimitBreak_SelfDamage');
 	Template.AdditionalAbilities.AddItem('DP_LimitBreak_SoakDamage');
@@ -1610,12 +1596,10 @@ static function EventListenerReturn SoakDamageListener(Object EventData, Object 
 	local XComGameState_Unit SourceUnit;
 	local UnitValue LastEffectDamage, DamageThisTurn;
 	local UnitValue DamageSoaked;
-	local XComGameState_Ability AbilityState;
 	local int Health;
 
 	AbilityContext = XComGameStateContext_Ability(GameState.GetContext());
 	SourceUnit = XComGameState_Unit(EventSource);
-	AbilityState = XComGameState_Ability(CallbackData);
 
 	SourceUnit.GetUnitValue('LastEffectDamage', LastEffectDamage);
 	SourceUnit.GetUnitValue('DamageThisTurn', DamageThisTurn);
@@ -1714,8 +1698,72 @@ static function X2AbilityTemplate Create_DP_LimitBreak_DealSoakedDamage()	//this
 
 static function X2AbilityTemplate Create_DP_LegShot()
 {
+	local X2AbilityTemplate                 Template;
+	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2Effect_PersistentStatChange		MobilityDamageEffect;
+
+	Template = class'X2Ability_AkimboAbilitySet'.static.SingleShot('DP_LegShot', "DualRight");
+
+	X2AbilityToHitCalc_DPMelee(Template.AbilityToHitCalc).bAllowCrit = false; //cannot crit
+
+	Template.IconImage = "img:///WP_Akimbo.UIIcons.LegShot";
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_CORPORAL_PRIORITY;
+	Template.AbilitySourceName = 'eAbilitySource_Perk';                                       // color of the icon
+
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.iNumPoints = 1;
+	ActionPointCost.bConsumeAllPoints = true;
+	ActionPointCost.DoNotConsumeAllSoldierAbilities.AddItem('DP_BulletTime');
+	Template.AbilityCosts.AddItem(ActionPointCost);
+
+	MobilityDamageEffect = new class 'X2Effect_PersistentStatChange';
+	MobilityDamageEffect.BuildPersistentEffect (1, false, false, false, eGameRule_PlayerTurnEnd);
+	MobilityDamageEffect.SetDisplayInfo(ePerkBuff_Penalty,Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage,,, Template.AbilitySourceName);
+	MobilityDamageEffect.AddPersistentStatChange (eStat_Mobility, -10);
+	MobilityDamageEffect.DuplicateResponse = eDupe_Allow;
+	MobilityDamageEffect.EffectName = 'LegShotEffect';
+	Template.AddTargetEffect(MobilityDamageEffect);
+
+	Template.DamagePreviewFn = LegShotDamagePreview;
+
+	Template.AdditionalAbilities.AddItem('DP_LegShotSecondary');
+	Template.PostActivationEvents.AddItem('DP_LegShotSecondary');
+
+	return Template;
+}
+
+static function X2AbilityTemplate Create_DP_LegShotSecondary()
+{
+	local X2AbilityTemplate	Template;
+	local X2AbilityTrigger_EventListener    Trigger;
+	local X2Effect_PersistentStatChange		MobilityDamageEffect;
+
+	Template = class'X2Ability_AkimboAbilitySet'.static.SingleShot('DP_LegShotSecondary', "DualLeft");
+
+	X2AbilityToHitCalc_DPMelee(Template.AbilityToHitCalc).bAllowCrit = false; //cannot crit
+
+	Trigger = new class'X2AbilityTrigger_EventListener';
+	Trigger.ListenerData.Deferral = ELD_OnStateSubmitted;
+	Trigger.ListenerData.EventID = 'DP_LegShotSecondary';
+	Trigger.ListenerData.Filter = eFilter_Unit;
+	Trigger.ListenerData.EventFn = class'XComGameState_Ability'.static.AbilityTriggerEventListener_OriginalTarget;
+	Template.AbilityTriggers.AddItem(Trigger);
+
+	MobilityDamageEffect = new class 'X2Effect_PersistentStatChange';
+	MobilityDamageEffect.BuildPersistentEffect (1, false, false, false, eGameRule_PlayerTurnEnd);
+	MobilityDamageEffect.SetDisplayInfo(ePerkBuff_Penalty,Template.LocFriendlyName, Template.GetMyHelpText(), Template.IconImage,,, Template.AbilitySourceName);
+	MobilityDamageEffect.AddPersistentStatChange (eStat_Mobility, -10);
+	MobilityDamageEffect.DuplicateResponse = eDupe_Allow;
+	MobilityDamageEffect.EffectName = 'LegShotEffect';
+	Template.AddTargetEffect(MobilityDamageEffect);
+
+	return Template;
+}
+
+/*
+static function X2AbilityTemplate Create_DP_LegShot()
+{
 	local X2AbilityTemplate                 Template;	
-	local X2AbilityCost_DP_Ammo             AmmoCost;
 	local X2AbilityCost_ActionPoints        ActionPointCost;
 	local X2Effect_DP_ApplySecondaryWeaponDamage	 WeaponDamageEffect2;
 	local X2Effect_PersistentStatChange		MobilityDamageEffect;
@@ -1747,9 +1795,8 @@ static function X2AbilityTemplate Create_DP_LegShot()
 	Template.AddTargetEffect(WeaponDamageEffect2);
 
 	return Template;	
-}
+}*/
 
-// DirtyTrick
 static function X2AbilityTemplate Create_DP_DirtyKick()
 {
 	local X2AbilityTemplate                 Template;
@@ -1793,14 +1840,16 @@ static function X2AbilityTemplate Create_DP_DirtyKick()
 	StandardMelee = new class'X2AbilityToHitCalc_DPMelee';
 	Template.AbilityToHitCalc = StandardMelee;
 
-    Template.AbilityTargetStyle = default.SimpleSingleMeleeTarget;
+   // Template.AbilityTargetStyle = default.SimpleSingleMeleeTarget;
+	Template.AbilityTargetStyle = new class'X2AbilityTarget_MovingMelee';
+
 	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
 	Template.TargetingMethod = class'X2TargetingMethod_MeleePath';
 
 	// Target Conditions
 	Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);
 	Template.AbilityTargetConditions.AddItem(default.MeleeVisibilityCondition);
-		// The Target must be alive and a humanoid
+	// The Target must be alive and a humanoid
 	UnitPropertyCondition = new class'X2Condition_UnitProperty';
 	UnitPropertyCondition.ExcludeRobotic = true;
 	UnitPropertyCondition.ExcludeLargeUnits = true;
@@ -1816,9 +1865,12 @@ static function X2AbilityTemplate Create_DP_DirtyKick()
 	Template.ActivationSpeech = 'StunTarget';
 	Template.SourceMissSpeech = 'SwordMiss';
 	Template.bSkipMoveStop = false;
-	Template.CustomFireAnim = 'DirtyTrick';
+	Template.CustomFireAnim = 'DirtyKick';
 	Template.CinescriptCameraType = "Ranger_Reaper";
 	Template.bSkipExitCoverWhenFiring = true;
+
+	Template.bCrossClassEligible = true;	//makes this available to all classes as an AWC perk
+	Template.AdditionalAbilities.AddItem('DP_DirtyKick_Passive');
 
     Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
 	Template.BuildInterruptGameStateFn = TypicalMoveEndAbility_BuildInterruptGameState;
@@ -1831,11 +1883,35 @@ static function X2AbilityTemplate Create_DP_DirtyKick()
 	return Template;
 }
 
+static function X2AbilityTemplate Create_DP_DirtyKick_Passive()	//this ability exists just to add an animset to make Dirty Kick play its animation when used by other classes
+{
+	local X2AbilityTemplate                 Template;
+	local X2Effect_AdditionalAnimSets		AnimSetEffect;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, 'DP_DirtyKick_Passive');
+
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
+	Template.Hostility = eHostility_Neutral;
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+	AnimSetEffect = new class'X2Effect_AdditionalAnimSets';
+	AnimSetEffect.AddAnimSetWithPath("WP_OffhandPistol_CV.Anims.AS_DirtyKick");	//have to add an animset to make Spinning Reload play its animation even with other classes
+	AnimSetEffect.BuildPersistentEffect(1, true, false, false);
+	Template.AddTargetEffect(AnimSetEffect);
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+
+	return Template;
+}
+
 static function X2AbilityTemplate Create_DP_HuntersInstinct()
 {
 	local X2AbilityTemplate						Template;
 	local X2Effect_DP_HuntersInstinct       DamageModifier;
-	local X2Effect_BonusWeaponDamage			DamageEffect;
+	//local X2Effect_BonusWeaponDamage			DamageEffect;
 
 	`CREATE_X2ABILITY_TEMPLATE(Template, 'DP_HuntersInstinct');
 
@@ -1944,7 +2020,7 @@ static function X2AbilityTemplate SingleShot(name TemplateName, string Hand)
 	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName); 	// Status condtions that do *not* prohibit this action.
 	SkipExclusions.AddItem(class'X2StatusEffects'.default.BurningName);
 	Template.AddShooterEffectExclusions(SkipExclusions);
-
+	Template.AbilityShooterConditions.AddItem(new class'X2Condition_DP_DualPistols');
 	// Targeting Details
 	// Can only shoot visible enemies
 	Template.AbilityTargetConditions.AddItem(default.GameplayVisibilityCondition);
@@ -1969,7 +2045,7 @@ static function X2AbilityTemplate SingleShot(name TemplateName, string Hand)
 	Template.AddTargetEffect(class'X2Ability_Chosen'.static.HoloTargetEffect());
 	Template.AddTargetEffect(class'X2Ability_GrenadierAbilitySet'.static.HoloTargetEffect());
 
-	WeaponDamageEffect = new class'X2Effect_Shredder';	//this will shred only if the soldier actually has the Shredder ability, otherwise it behaves identically to ApplyWeaponDamage
+	WeaponDamageEffect = new class'X2Effect_Shredder';	//this will shred only if the soldier actually has the Shredder ability from AWC, otherwise it behaves identically to ApplyWeaponDamage
 	WeaponDamageEffect.bAllowFreeKill = true;	//allow Repeater instakill
 	Template.AddTargetEffect(WeaponDamageEffect);
 
@@ -2026,6 +2102,7 @@ static function X2AbilityTemplate PistolWhip(name TemplateName, string Hand)
 	Template.AbilityTargetConditions.AddItem(default.MeleeVisibilityCondition);
 
 	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);		// Shooter Conditions
+	Template.AbilityShooterConditions.AddItem(new class'X2Condition_DP_DualPistols');
 	SkipExclusions.AddItem(class'X2StatusEffects'.default.BurningName);				//can be used while burning, just like default sword ability
 	Template.AddShooterEffectExclusions(SkipExclusions);
 
@@ -2112,6 +2189,94 @@ static function X2AbilityTemplate PistolWhip(name TemplateName, string Hand)
 	return Template;
 }
 
+static function X2AbilityTemplate Create_DP_DualOverwatch_Template(name TemplateName)
+{
+	local X2AbilityTemplate                 Template;	
+	local X2AbilityCost_ActionPoints		ActionPointCost;
+	local X2Effect_DP_ReserveActionPoints	ReserveActionPointsEffect;
+	local array<name>                       SkipExclusions;
+	local X2Effect_CoveringFire             CoveringFireEffect, CoveringFireEffectLeft;
+	local X2Condition_AbilityProperty       CoveringFireCondition;
+	local X2Condition_UnitProperty          ConcealedCondition;
+	local X2Effect_SetUnitValue             UnitValueEffect;
+	local X2Condition_UnitEffects           SuppressedCondition;
+
+	`CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
+
+	Template.AbilitySourceName = 'eAbilitySource_Default';
+	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
+	Template.IconImage = "img:///WP_Akimbo.UIIcons.DualOverwatch";
+	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.OVERWATCH_PRIORITY;
+	Template.bDisplayInUITooltip = false;
+	Template.bDisplayInUITacticalText = false;
+	Template.bDontDisplayInAbilitySummary = true;
+	Template.AbilityConfirmSound = "Unreal2DSounds_OverWatch";
+	
+	ActionPointCost = new class'X2AbilityCost_ActionPoints';
+	ActionPointCost.bConsumeAllPoints = true;   
+	ActionPointCost.DoNotConsumeAllSoldierAbilities.AddItem('DP_Quicksilver');
+	ActionPointCost.iNumPoints = 1;
+	Template.AbilityCosts.AddItem(ActionPointCost);
+	
+	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
+
+	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName);	//overwatch can be activated while disoriented???
+	Template.AddShooterEffectExclusions(SkipExclusions);
+
+	SuppressedCondition = new class'X2Condition_UnitEffects';
+	SuppressedCondition.AddExcludeEffect(class'X2Effect_Suppression'.default.EffectName, 'AA_UnitIsSuppressed');
+	SuppressedCondition.AddExcludeEffect(class'X2Effect_SkirmisherInterrupt'.default.EffectName, 'AA_AbilityUnavailable');
+	Template.AbilityShooterConditions.AddItem(SuppressedCondition);
+	
+	ReserveActionPointsEffect = new class'X2Effect_DP_ReserveActionPoints';
+	ReserveActionPointsEffect.NumPoints = 2;
+	Template.AddTargetEffect(ReserveActionPointsEffect);
+
+	CoveringFireEffect = new class'X2Effect_CoveringFire';
+	CoveringFireEffect.AbilityToActivate = 'DP_OverwatchShotRight';
+	CoveringFireEffect.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
+	CoveringFireCondition = new class'X2Condition_AbilityProperty';
+	CoveringFireCondition.OwnerHasSoldierAbilities.AddItem('CoveringFire');
+	CoveringFireEffect.TargetConditions.AddItem(CoveringFireCondition);
+	Template.AddTargetEffect(CoveringFireEffect);
+
+	CoveringFireEffectLeft = new class'X2Effect_CoveringFire';
+	CoveringFireEffectLeft.AbilityToActivate = 'DP_OverwatchShotLeft';
+	CoveringFireEffectLeft.BuildPersistentEffect(1, false, true, false, eGameRule_PlayerTurnBegin);
+	CoveringFireCondition = new class'X2Condition_AbilityProperty';
+	CoveringFireCondition.OwnerHasSoldierAbilities.AddItem('CoveringFire');
+	CoveringFireEffectLeft.TargetConditions.AddItem(CoveringFireCondition);
+	Template.AddTargetEffect(CoveringFireEffectLeft);
+
+	ConcealedCondition = new class'X2Condition_UnitProperty';
+	ConcealedCondition.ExcludeFriendlyToSource = false;
+	ConcealedCondition.IsConcealed = true;
+
+	UnitValueEffect = new class'X2Effect_SetUnitValue';
+	UnitValueEffect.UnitName = class'X2Ability_DefaultAbilitySet'.default.ConcealedOverwatchTurn;
+	UnitValueEffect.CleanupType = eCleanup_BeginTurn;
+	UnitValueEffect.NewValueToSet = 1;
+	UnitValueEffect.TargetConditions.AddItem(ConcealedCondition);
+	Template.AddTargetEffect(UnitValueEffect);
+
+	Template.AbilityToHitCalc = default.DeadEye;
+	Template.AbilityTargetStyle = default.SelfTarget;
+	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
+
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	Template.BuildVisualizationFn = class'X2Ability_DefaultAbilitySet'.static.OverwatchAbility_BuildVisualization;
+	Template.CinescriptCameraType = "Overwatch";
+
+	Template.Hostility = eHostility_Defensive;
+
+	Template.DefaultKeyBinding = class'UIUtilities_Input'.const.FXS_KEY_Y;
+	Template.bNoConfirmationWithHotKey = true;
+
+	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.NonAggressiveChosenActivationIncreasePerUse;
+
+	return Template;
+}
+
 //Thanks to Musashi for this
 static function bool DualShotDamagePreview(XComGameState_Ability AbilityState, StateObjectReference TargetRef, out WeaponDamageValue MinDamagePreview, out WeaponDamageValue MaxDamagePreview, out int AllowsShield)
 {
@@ -2126,6 +2291,29 @@ static function bool DualShotDamagePreview(XComGameState_Ability AbilityState, S
 	AbilityOwner = XComGameState_Unit(History.GetGameStateForObjectID(AbilityState.OwnerStateObject.ObjectID));
 
 	DualSlashSecondaryRef = AbilityOwner.FindAbility('DP_DualShotSecondary');
+	DualSlashSecondaryAbility = XComGameState_Ability(History.GetGameStateForObjectID(DualSlashSecondaryRef.ObjectID));
+
+	if (DualSlashSecondaryAbility != none)
+	{
+		DualSlashSecondaryAbility.NormalDamagePreview(TargetRef, MinDamagePreview, MaxDamagePreview, AllowsShield);
+	}
+
+	return true;
+}
+
+static function bool LegShotDamagePreview(XComGameState_Ability AbilityState, StateObjectReference TargetRef, out WeaponDamageValue MinDamagePreview, out WeaponDamageValue MaxDamagePreview, out int AllowsShield)
+{
+	local XComGameState_Unit AbilityOwner;
+	local StateObjectReference DualSlashSecondaryRef;
+	local XComGameState_Ability DualSlashSecondaryAbility;
+	local XComGameStateHistory History;
+
+	AbilityState.NormalDamagePreview(TargetRef, MinDamagePreview, MaxDamagePreview, AllowsShield);
+
+	History = `XCOMHISTORY;
+	AbilityOwner = XComGameState_Unit(History.GetGameStateForObjectID(AbilityState.OwnerStateObject.ObjectID));
+
+	DualSlashSecondaryRef = AbilityOwner.FindAbility('DP_LegShotSecondary');
 	DualSlashSecondaryAbility = XComGameState_Ability(History.GetGameStateForObjectID(DualSlashSecondaryRef.ObjectID));
 
 	if (DualSlashSecondaryAbility != none)
@@ -2228,13 +2416,9 @@ static function TakeInitiative_BuildVisualization(XComGameState VisualizeGameSta
 	local X2Action_MoveTurn					FaceEnemy;					//this is the only thing I added to this copypaste of Typical Ability Build Vis. 
 	local X2Action_PlaySoundAndFlyOver		SoundAndFlyover;
 	local X2Action_ExitCover				ExitCoverAction;
-	local X2Action_MoveTeleport				TeleportMoveAction;
-	local X2Action_Delay					MoveDelay;
-	local X2Action_MoveEnd					MoveEnd;
 	local X2Action_MarkerNamed				JoinActions;
 	local array<X2Action>					LeafNodes;
 	local X2Action_WaitForAnotherAction		WaitForFireAction;
-	local X2Action_ExitCover				ExitCoverAction2;
 	//state objects
 	local XComGameState_Ability				AbilityState;
 	local XComGameState_EnvironmentDamage	EnvironmentDamageEvent;
@@ -2267,7 +2451,6 @@ static function TakeInitiative_BuildVisualization(XComGameState VisualizeGameSta
 
 	//indices
 	local int	EffectIndex, TargetIndex;
-	local int	TrackIndex;
 	local int	WindowBreakTouchIndex;
 
 	//flags
@@ -2774,7 +2957,7 @@ static function EventListenerReturn TakeInitiativeListener(Object EventData, Obj
 {
 	local XComGameStateContext_Ability AbilityContext;
 	local XComGameState_Unit SourceUnit;
-	local int i, j;
+	local int i;
 	local XComGameState_Ability AbilityState;
 	local GameRulesCache_Unit UnitCache;
 
@@ -2805,148 +2988,6 @@ static function EventListenerReturn TakeInitiativeListener(Object EventData, Obj
 		}
 	}
 	return ELR_NoInterrupt;
-}
-
-static function X2AbilityTemplate Create_DP_Unload_backup()
-{
-	local X2AbilityTemplate                 Template;	
-	local X2AbilityCost_Ammo                AmmoCost;
-	local X2AbilityCost_ActionPoints        ActionPointCost;
-	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
-	local X2AbilityMultiTarget_BurstFire    BurstFireMultiTarget;
-	local X2AbilityCooldown                 Cooldown;
-	local X2AbilityToHitCalc_StandardAim    ToHitCalc;
-
-	// Macro to do localisation and stuffs
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'DP_Unload');
-
-	// Icon Properties
-	Template.IconImage = "img:///UILibrary_PerkIcons.UIPerk_fanfire";
-	Template.ShotHUDPriority = class'UIUtilities_Tactical'.const.CLASS_COLONEL_PRIORITY;
-	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
-	Template.DisplayTargetHitChance = true;
-	Template.AbilitySourceName = 'eAbilitySource_Perk';                                       // color of the icon
-	Template.AbilityConfirmSound = "TacticalUI_ActivateAbility";
-	// Activated by a button press; additionally, tells the AI this is an activatable
-	Template.AbilityTriggers.AddItem(default.PlayerInputTrigger);
-
-	// *** VALIDITY CHECKS *** //
-	Template.AddShooterEffectExclusions();
-	Template.DefaultSourceItemSlot = eInvSlot_PrimaryWeapon;
-
-	// Targeting Details
-	// Can only shoot visible enemies
-	Template.AbilityTargetConditions.AddItem(default.GameplayVisibilityCondition);
-	// Can't target dead; Can't target friendlies
-	Template.AbilityTargetConditions.AddItem(default.LivingHostileTargetProperty);
-	// Can't shoot while dead
-	Template.AbilityShooterConditions.AddItem(default.LivingShooterProperty);
-	// Only at single targets that are in range.
-	Template.AbilityTargetStyle = default.SimpleSingleTarget;
-
-	// Action Point
-	ActionPointCost = new class'X2AbilityCost_ActionPoints';
-	ActionPointCost.iNumPoints = 1;
-	ActionPointCost.bConsumeAllPoints = true;
-	Template.AbilityCosts.AddItem(ActionPointCost);	
-
-	//Cooldown = new class'X2AbilityCooldown';
-	//Cooldown.iNumTurns = 3;//default.FANFIRE_COOLDOWN;
-	//Template.AbilityCooldown = Cooldown;
-
-	Template.CustomFireAnim = 'FF_FireMultiShotConv';
-
-	// Ammo
-	
-	AmmoCost = new class'X2AbilityCost_Ammo';	
-	AmmoCost.iAmmo = 6;
-	Template.bAllowAmmoEffects = true; 
-	Template.bAllowBonusWeaponEffects = true;
-	Template.AbilityCosts.AddItem(AmmoCost);
-	// Weapon Upgrade Compatibility
-	Template.bAllowFreeFireWeaponUpgrade = true;
-
-	// Damage Effect
-	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
-	Template.AddTargetEffect(WeaponDamageEffect);
-	Template.AddMultiTargetEffect(WeaponDamageEffect);
-
-	ToHitCalc = new class'X2AbilityToHitCalc_StandardAim';
-	Template.AbilityToHitCalc = ToHitCalc;
-	Template.AbilityToHitOwnerOnMissCalc = ToHitCalc;
-
-	BurstFireMultiTarget = new class'X2AbilityMultiTarget_BurstFire';
-	BurstFireMultiTarget.NumExtraShots = 2;
-	Template.AbilityMultiTargetStyle = BurstFireMultiTarget;
-		
-	// Targeting Method
-	Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
-	Template.CinescriptCameraType = "StandardGunFiring";
-	Template.AbilityTargetStyle = default.SimpleSingleTarget;
-	// Voice events
-	Template.ActivationSpeech = 'FanFire';
-
-	// MAKE IT LIVE!
-	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
-
-	Template.SuperConcealmentLoss = class'X2AbilityTemplateManager'.default.SuperConcealmentStandardShotLoss;
-	Template.ChosenActivationIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotChosenActivationIncreasePerUse;
-	Template.LostSpawnIncreasePerUse = class'X2AbilityTemplateManager'.default.StandardShotLostSpawnIncreasePerUse;
-	Template.bFrameEvenWhenUnitIsHidden = true;
-
-	Template.AdditionalAbilities.AddItem('DP_UnloadSecondary');
-	Template.PostActivationEvents.AddItem('DP_UnloadSecondary');
-
-	return Template;	
-}
-
-static function X2AbilityTemplate Create_DP_UnloadSecondary_backup()
-{
-	local X2AbilityTemplate                         Template;
-	local X2AbilityTrigger_EventListener			AbilityTrigger;
-	local X2AbilityMultiTarget_BurstFire    BurstFireMultiTarget;
-		local X2AbilityToHitCalc_StandardAim    ToHitCalc;
-	local X2Effect_ApplyWeaponDamage        WeaponDamageEffect;
-
-	`CREATE_X2ABILITY_TEMPLATE(Template, 'DP_UnloadSecondary');
-
-	// Damage Effect
-	WeaponDamageEffect = new class'X2Effect_ApplyWeaponDamage';
-	Template.AddTargetEffect(WeaponDamageEffect);
-	Template.AddMultiTargetEffect(WeaponDamageEffect);
-
-	ToHitCalc = new class'X2AbilityToHitCalc_StandardAim';
-	Template.AbilityToHitCalc = ToHitCalc;
-	Template.AbilityToHitOwnerOnMissCalc = ToHitCalc;
-
-	BurstFireMultiTarget = new class'X2AbilityMultiTarget_BurstFire';
-	BurstFireMultiTarget.NumExtraShots = 2;
-	Template.AbilityMultiTargetStyle = BurstFireMultiTarget;
-
-	Template.AbilityTargetStyle = default.SimpleSingleTarget;
-
-
-	Template.DefaultSourceItemSlot = eInvSlot_SecondaryWeapon;
-	Template.bFrameEvenWhenUnitIsHidden = true;
-	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
-
-	AbilityTrigger = new class'X2AbilityTrigger_EventListener';
-	AbilityTrigger.ListenerData.Deferral = ELD_OnStateSubmitted;
-	AbilityTrigger.ListenerData.EventID = 'DP_UnloadSecondary';
-	AbilityTrigger.ListenerData.Filter = eFilter_Unit;
-	AbilityTrigger.ListenerData.EventFn = class'XComGameState_Ability'.static.AbilityTriggerEventListener_OriginalTarget;
-	Template.AbilityTriggers.AddItem(AbilityTrigger);
-
-	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
-	Template.MergeVisualizationFn = MergeVisualization;
-
-	Template.bUniqueSource = true;
-	Template.bSkipExitCoverWhenFiring  = true;
-	Template.bSkipFireAction = true;
-
-	return Template;
 }
 
 static function XComGameState DualPistols_BuildGameState(XComGameStateContext Context)	//custom function to correctly apply ammo cost
@@ -3176,4 +3217,3 @@ static function XComGameState DualPistols_BuildGameState(XComGameStateContext Co
 																															//this is necessary to handle ammo cost for abilities attached to left gun, which has infinite ammo
 	return NewGameState;
 }
-

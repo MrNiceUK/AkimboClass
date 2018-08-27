@@ -25,8 +25,8 @@ function bool ChangeHitResultForTarget(XComGameState_Effect EffectState, XComGam
 		//trigger a spinning reload when getting shot. it will go through only if the soldier has 0 ammo.
 		`XEVENTMGR.TriggerEvent('DP_SpinningReload_Reactive', TargetUnit, TargetUnit); 
 	
-		//stack Overwatch Pacer so that soldier can take an overwatch right away
-		TargetUnit.SetUnitFloatValue(class'X2Effect_OverwatchPacer'.default.OverwatchPacerValue, class'X2Condition_OverwatchPacer'.default.OVERWATCH_PACER_TRIGGER, eCleanup_BeginTactical);	
+		//reset Overwatch Pacer so that soldier can take an overwatch right away
+		TargetUnit.SetUnitFloatValue('DP_OverwatchPacerValue', 0, eCleanup_BeginTactical);	
 
 		for (j = TargetUnit.ReserveActionPoints.Length - 1; j >= 0; --j)	//go through all reserve action point types the soldier has
 		{

@@ -31,6 +31,6 @@ simulated protected function OnEffectAdded(const out EffectAppliedData ApplyEffe
 defaultproperties
 {
 	NextGunValue = "NextGunToFire"
-	UseNextGunMaster = 0
+	NextGunMaster = 0
 	UseNextGunMaster = false
 }

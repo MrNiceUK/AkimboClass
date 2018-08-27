@@ -4,7 +4,6 @@ var config array<config int> AimModifier;
 
 function int GetWeaponRangeModifier(XComGameState_Unit Shooter, XComGameState_Unit Target, XComGameState_Item Weapon)
 {
-    local X2WeaponTemplate WeaponTemplate;
     local int Tiles, Modifier;
 
     if (Shooter != none && Target != none)

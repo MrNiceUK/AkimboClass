@@ -28,7 +28,22 @@ tags=soldier class, Wot, War of the Chosen, Dual Wield Pistols, Akimbo, Gun Fu</
     <Content Include="Config\XComGameData.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Config\XComGameData_SoldierSkills.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\CIN_SoldierIntros_Akimbo.umap">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\CIN_SoldierIntros_Akimbo_VIEWER.umap">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\SoundSpeechIridar.upk">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\WP_Akimbo.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\SoundSpeechIridar.int">
       <SubType>Content</SubType>
     </Content>
     <Content Include="ReadMe.txt" />
@@ -49,7 +64,16 @@ tags=soldier class, Wot, War of the Chosen, Dual Wield Pistols, Akimbo, Gun Fu</
     <Content Include="Src\AkimboClass\Classes\X2Ability_AkimboAbilitySet.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\AkimboClass\Classes\X2Ability_AkimboAbilitySet2.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\AkimboClass\Classes\X2Action_DelayedFireAction.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\AkimboClass\Classes\X2Action_FaceEnemy.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\AkimboClass\Classes\X2Character_IridarVO.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\AkimboClass\Classes\X2Condition_DP_AmmoCondition.uc">
@@ -59,6 +83,9 @@ tags=soldier class, Wot, War of the Chosen, Dual Wield Pistols, Akimbo, Gun Fu</
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\AkimboClass\Classes\X2Condition_DP_CycleGuns.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\AkimboClass\Classes\X2Condition_DP_DualPistols.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\AkimboClass\Classes\X2Condition_DP_TrickShot.uc">
@@ -87,6 +114,9 @@ tags=soldier class, Wot, War of the Chosen, Dual Wield Pistols, Akimbo, Gun Fu</
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\AkimboClass\Classes\X2Effect_DP_LimitBreak.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\AkimboClass\Classes\X2Effect_DP_PistolWhipCost.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\AkimboClass\Classes\X2Effect_DP_ReserveActionPoints.uc">

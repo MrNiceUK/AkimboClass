@@ -3,7 +3,6 @@ class X2Condition_DP_TrickShot extends X2Condition;
 event name CallAbilityMeetsCondition(XComGameState_Ability kAbility, XComGameState_BaseObject kTarget) //this condition returns true if target can be flanked in principle, but right now is in cover
 {
 	local XComGameState_Unit				SourceUnit, TargetUnit;
-	local XComGameState_InteractiveObject	TargetObject;
 	local GameRulesCache_VisibilityInfo		VisInfo;
 	
 	TargetUnit = XComGameState_Unit(kTarget);

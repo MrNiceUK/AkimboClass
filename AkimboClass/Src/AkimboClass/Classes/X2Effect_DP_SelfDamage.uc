@@ -7,17 +7,11 @@ var config float LIMIT_BREAK_AMPLIFY_DAMAGE;
 simulated protected function OnEffectAdded(const out EffectAppliedData ApplyEffectParameters, XComGameState_BaseObject kNewTargetState, XComGameState NewGameState, XComGameState_Effect NewEffectState)
 {
 	local Damageable kNewTargetDamageableState;
-	local int iDamage, iMitigated, NewRupture, NewShred, TotalToKill; 
-	local XComGameState_Unit TargetUnit, SourceUnit;
-	local XComGameState_Item SourceWeapon;
-	local array<X2WeaponUpgradeTemplate> WeaponUpgradeTemplates;
-	local X2WeaponUpgradeTemplate WeaponUpgradeTemplate;
+	local int iDamage, iMitigated, NewRupture, NewShred; 
+	local XComGameState_Unit TargetUnit;
 	local array<Name> AppliedDamageTypes;
 	local int bAmmoBypassesShields, bFullyImmune;
 	local bool bDoesDamageIgnoreShields;
-	local XComGameStateHistory History;
-	local StateObjectReference EffectRef;
-	local XComGameState_Effect EffectState;
 	local array<DamageModifierInfo> SpecialDamageMessages;
 	local DamageResult ZeroDamageResult;
 	local int Health;
@@ -36,7 +30,7 @@ simulated protected function OnEffectAdded(const out EffectAppliedData ApplyEffe
 		`Log("IRIDAR Self Damage Effect - Total Damage Soaked: " @ DamageSoaked.fValue,, 'AkimboClass');
 
 		EffectDamageValue.Damage = DamageSoaked.fValue * default.LIMIT_BREAK_AMPLIFY_DAMAGE;
-		SourceUnit.SetUnitFloatValue('DP_LimitBreak_SoakedDamage', 0, eCleanup_Never);	//just in case I want to make Limit Break usable more than once per turn. Also I dunno if UnitValues are preserved between missions
+		TargetUnit.SetUnitFloatValue('DP_LimitBreak_SoakedDamage', 0, eCleanup_Never);	//just in case I want to make Limit Break usable more than once per turn. Also I dunno if UnitValues are preserved between missions
 	}
 	else 
 	{

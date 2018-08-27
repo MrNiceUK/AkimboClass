@@ -47,14 +47,13 @@ static function EventListenerReturn OnAbilityActivated(Object EventData, Object 
 
 simulated function PatchSequentialShots_PostBuildVisualization(XComGameState VisualizeGameState)
 {
-	local XComGameStateHistory History;
 	local XComGameStateVisualizationMgr VisMgr;
 	local X2Action_MarkerNamed MarkerNamed, JoinMarker;
 	local array<X2Action> arrActions, ParentsToKeep;
 	local int i;
 	local XComGameStateContext_Ability AbilityContext;
 	local StateObjectReference ShooterRef;
-	History = `XCOMHISTORY;
+
 	VisMgr = `XCOMVISUALIZATIONMGR;
 
 	// at this point, the VisualizationTree is the global tree with any other potential previous shots

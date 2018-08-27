@@ -1,28 +1,5 @@
-class X2Action_FaceEnemy extends X2Action_MoveTurn;
-/*
-function Init()
-{
-	AbilityContext = XComGameStateContext_Ability(StateChangeContext);
-	TargetPawn = XGUnit(`XCOMHISTORY.GetGameStateForObjectID(AbilityContext.InputContext.PrimaryTarget.ObjectID).GetVisualizer()).GetPawn();
-	
+class X2Action_FaceEnemy extends X2Action_MoveTurn; //this is part of Take Initiative routine; it forces the soldier to turn to each specific enemy he's currently attacking in melee.
 
-	ToTargetActor = TargetPawn.Location - UnitPawn.Location;
-	ToTargetActor.Z = 0;
-	ToTargetActor = Normal(ToTargetActor);
-
-	`Log("IRIDAR To Target Actior",, 'AkimboClass');
-
-	if( AbilityContext != none )
-	{
-		super.Init();
-	}
-	else
-	{
-		super.Init();
-		AbilityContext = XComGameStateContext_Ability(StateChangeContext);
-	}
-}
-*/
 simulated state Executing
 {
 		simulated function bool ShouldTurn()
@@ -65,13 +42,6 @@ Begin:
 		if(!Unit.IsMine()) // Debug code to show alien's last facing direction before action completed.
 			Unit.m_kBehavior.SetDebugDir(Vector(UnitPawn.Rotation), , true);
 		// done!
-	}
-    /*Unit.IdleStateMachine.ForceHeading(m_vFaceDir);
-    Sleep(0.1f);
-    while(Unit.IdleStateMachine.IsEvaluatingStance())
-    {
-        Sleep(0.0f);
-    }*/
-	
+	}	
 	CompleteAction();
 }
