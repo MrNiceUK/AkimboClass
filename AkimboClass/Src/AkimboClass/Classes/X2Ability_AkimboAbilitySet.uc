@@ -358,6 +358,7 @@ static function X2AbilityTemplate Create_DP_OverwatchShotRight(name TemplateName
 	Template = class'X2Ability_AkimboAbilitySet'.static.SingleShot(TemplateName, Hand);
 
 	X2AbilityToHitCalc_StandardAim(Template.AbilityToHitCalc).bReactionFire = true;
+	//Mr. Nice: No BuildInterruptGameStateFn for non-activated abilities
 	Template.BuildInterruptGameStateFn = none;
 
 	ReserveActionPointCost = new class'X2AbilityCost_ReserveActionPoints';
@@ -1201,7 +1202,10 @@ static function X2AbilityTemplate Create_DP_CQCSupremacyAttack()
 
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
 	X2AbilityToHitCalc_DPMelee(Template.AbilityToHitCalc).bReactionFire = true;
+	// Mr. Nice: It's not a move ending melee
 	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
+	//Mr. Nice: No BuildInterruptGameStateFn for non-activated abilities
+	Template.BuildInterruptGameStateFn = none;
 	//  trigger on movement
 	/*
 	Trigger = new class'X2AbilityTrigger_EventListener';
@@ -1508,7 +1512,7 @@ static function X2AbilityTemplate Create_DP_LimitBreak()
 
 	UnitValueEffect = new class'X2Effect_SetUnitValue';	//this unit value tracks the amount of actions granted by Limit Break
 	UnitValueEffect.UnitName = class'X2Effect_DP_LimitBreak'.default.BonusActionsValue;
-	UnitValueEffect.CleanupType = eCleanup_Never;
+	UnitValueEffect.CleanupType =  eCleanup_BeginTurn;
 	UnitValueEffect.NewValueToSet = -1;					//we set a negative value because Limit Break consumes actions points, and will regrant one action point immediately. 
 	Template.AddTargetEffect(UnitValueEffect);			//it's easier to track from 0, since this way we'll be counting actions taken after Limit Break was activated.
 
@@ -1983,6 +1987,10 @@ static function X2AbilityTemplate SingleShot(name TemplateName, string Hand)
 	AmmoCost = new class'X2AbilityCost_DP_Ammo';	
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_AlwaysShow;
 
+	//Mr. Nice: These two moved here so "dualleft" can change them
+	Template.CinescriptCameraType = "StandardGunFiring";
+	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
+
 	if (Hand == "Right")
 	{
 		CycleGunsCondition.NextGunToFire = 0;
@@ -2004,17 +2012,25 @@ static function X2AbilityTemplate SingleShot(name TemplateName, string Hand)
 		Template.CustomFireAnim = 'FF_DualShot';
 		Template.DefaultSourceItemSlot = eInvSlot_PrimaryWeapon;
 		AmmoCost.iAmmo = 2;
+		Template.AbilityToHitCalc=new class'X2AbilityToHitCalc';
 	}
 	if (Hand == "DualLeft")
 	{
 		Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
 		Template.DefaultSourceItemSlot = eInvSlot_SecondaryWeapon;
-		Template.bSkipFireAction = true;
+		//Don't skip the fire action, we want it to anchor the applydamage actions
+		//Do skip exitcover & perk
+		//Template.bSkipFireAction = true;
+		Template.bSkipExitCoverWhenFiring=true;
 		Template.bShowActivation = false;
-		Template.bSkipExitCoverWhenFiring = false;
-		Template.MergeVisualizationFn = MergeVisualization;	
+		Template.bSkipPerkActivationActions=true;
+		Template.MergeVisualizationFn = SharedAnimation_MergeVisualization;
 		AmmoCost.iAmmo = 0;
 		AmmoCost.bFreeCost = true;
+		//Will be entirely contained within the first shots cinescript, an extra one will just get in the way
+		Template.CinescriptCameraType = "";
+		//Non-activated abilities sholdn't have this set;
+		Template.BuildInterruptGameStateFn = none;
 	}
 	
 	SkipExclusions.AddItem(class'X2AbilityTemplateManager'.default.DisorientedName); 	// Status condtions that do *not* prohibit this action.
@@ -2052,11 +2068,9 @@ static function X2AbilityTemplate SingleShot(name TemplateName, string Hand)
 	ToHitCalc = new class'X2AbilityToHitCalc_StandardAim';
 	Template.AbilityToHitCalc = ToHitCalc;
 	Template.AbilityToHitOwnerOnMissCalc = ToHitCalc;
-		
-	Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
-	Template.bUsesFiringCamera = true;
-	Template.CinescriptCameraType = "StandardGunFiring";
 
+	//Template.TargetingMethod = class'X2TargetingMethod_OverTheShoulder';
+	//Template.bUsesFiringCamera = true; 
 	KnockbackEffect = new class'X2Effect_Knockback';
 	KnockbackEffect.KnockbackDistance = 1;
 	Template.AddTargetEffect(KnockbackEffect);
@@ -2068,7 +2082,6 @@ static function X2AbilityTemplate SingleShot(name TemplateName, string Hand)
 
 	Template.BuildNewGameStateFn = DualPistols_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;	
-	Template.BuildInterruptGameStateFn = TypicalAbility_BuildInterruptGameState;
 
 
 	return Template;	
@@ -2133,7 +2146,8 @@ static function X2AbilityTemplate PistolWhip(name TemplateName, string Hand)
 	Template.bAllowBonusWeaponEffects = false;		
 	WeaponDamageEffect.bAllowFreeKill = false;		//Repeater instakill
 
-	Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
+	//Moved here so dualleft can change them
+	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
 
 	if (Hand == "DualRight")
@@ -2141,6 +2155,7 @@ static function X2AbilityTemplate PistolWhip(name TemplateName, string Hand)
 		Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_AlwaysShow;
 		Template.AbilityTargetStyle = new class'X2AbilityTarget_MovingMelee';
 		Template.DefaultSourceItemSlot = eInvSlot_PrimaryWeapon;
+		Template.BuildNewGameStateFn = TypicalMoveEndAbility_BuildGameState;
 		Template.BuildInterruptGameStateFn = TypicalMoveEndAbility_BuildInterruptGameState;	
 
 		Template.bSkipMoveStop = true;
@@ -2159,8 +2174,12 @@ static function X2AbilityTemplate PistolWhip(name TemplateName, string Hand)
 	{
 		Template.DefaultSourceItemSlot = eInvSlot_SecondaryWeapon;
 		Template.eAbilityIconBehaviorHUD = EAbilityIconBehavior_NeverShow;
-		Template.MergeVisualizationFn = MergeVisualization;
-		Template.bSkipFireAction = true;
+		Template.MergeVisualizationFn = SharedAnimation_MergeVisualization;
+		//Don't skip the fire action, we want it to anchor the applydamage actions
+		//Do skip exitcover & perk
+		//Template.bSkipFireAction = true;
+		Template.bSkipExitCoverWhenFiring = true;
+		Template.bSkipPerkActivationActions=true;
 		Template.bShowActivation = false;
 	}
 	if (Hand == "Right")
@@ -2370,13 +2389,327 @@ static function bool PistolWhipDamagePreview(XComGameState_Ability AbilityState,
 	return true;
 }
 
+
+simulated function SequentialShot_MergeVisualization(X2Action BuildTree, out X2Action VisualizationTree)
+{
+	local XComGameStateVisualizationMgr VisMgr;
+	local Array<X2Action> arrActions;
+	local X2Action_MarkerTreeInsertBegin MarkerStart;
+	local X2Action_MarkerNamed MarkerNamed, JoinMarker, TrackerMarker;
+	local X2Action_ExitCover ExitCoverAction, FirstExitCoverAction;
+	local X2Action_EnterCover EnterCoverAction, LastEnterCoverAction;
+	local X2Action_WaitForAnotherAction WaitAction;
+	local VisualizationActionMetadata ActionMetadata;
+	local int i;
+	// Variable for Issue #20
+	local int iBestHistoryIndex;
+
+	VisMgr = `XCOMVISUALIZATIONMGR;
+	MarkerStart = X2Action_MarkerTreeInsertBegin(VisMgr.GetNodeOfType(BuildTree, class'X2Action_MarkerTreeInsertBegin'));
+	// Start Issue #20
+	// This function breaks 3+ subsequent shots. Somehow, the actions filled out by GetNodesOfType are sorted so that our
+	// "get the last join marker" actually sometimes finds us the FIRST join marker. This causes all these shot contexts to
+	// try and visualize themselves alongside each other, which is definitely not intended.
+	// Further investigations made it seem that the additional parameter bSortByHistoryIndex=true does not seem to have the desired effect
+	// but generally push it *somewhat* in the right direction
+	VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_MarkerNamed', arrActions, , , true);
+	// End Issue #20
+
+	//	get the last Join marker
+	// Start Issue #20
+	// GetNodesOfType() does not seem to produce a consistent ordering
+	// We will just manually get the "latest" one by comparing history indices
+	iBestHistoryIndex = -1;
+	for (i = 0; i < arrActions.Length; ++i)
+	{
+		MarkerNamed = X2Action_MarkerNamed(arrActions[i]);
+		if (MarkerNamed.MarkerName == 'Join' && (JoinMarker == None || MarkerNamed.StateChangeContext.AssociatedState.HistoryIndex > iBestHistoryIndex))
+		{
+			iBestHistoryIndex = MarkerNamed.StateChangeContext.AssociatedState.HistoryIndex;
+			// End Issue #20
+			JoinMarker = MarkerNamed;
+		}
+		else if (MarkerNamed.MarkerName == 'SequentialShotTracker')
+		{
+			TrackerMarker = MarkerNamed;
+		}
+		// Comment out for Issue #20
+		// We can't bail out early because we may need to compare more join markers :(
+		//if (JoinMarker != none && TrackerMarker != none)
+		//	break;
+	}
+
+	`assert(JoinMarker != none);
+
+	//	all other enter cover actions need to skip entering cover	
+	VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_EnterCover', arrActions);
+	for (i = 0; i < arrActions.Length; ++i)
+	{
+		//	@TODO - Ideally we need to check our ExitCover action to see if the step out it wants (from our original
+		//			location) is different from the previous ExitCover, in which case we'd need to go ahead
+		//			and allow the EnterCover to run, as well as not skip our ExitCover.
+
+		EnterCoverAction = X2Action_EnterCover(arrActions[i]);
+		EnterCoverAction.bSkipEnterCover = true;
+	}
+	LastEnterCoverAction = X2Action_EnterCover(VisMgr.GetNodeOfType(BuildTree, class'X2Action_EnterCover'));
+
+	//	have our exit cover not visualize since the unit is already out from the first shot
+	ExitCoverAction = X2Action_ExitCover(VisMgr.GetNodeOfType(BuildTree, class'X2Action_ExitCover'));
+	ExitCoverAction.bSkipExitCoverVisualization = true;
+
+	VisMgr.ConnectAction(MarkerStart, VisualizationTree, true, JoinMarker);
+	
+	//	now we have to make sure there's a wait parented to the first exit cover, which waits for the last enter cover
+	//	this will prevent the idle state machine from taking over and putting the unit back in cover
+		
+	if (TrackerMarker == none)
+	{
+		VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_ExitCover', arrActions);
+		FirstExitCoverAction = X2Action_ExitCover(arrActions[0]);
+		`assert(FirstExitCoverAction != none);
+		ActionMetadata = FirstExitCoverAction.Metadata;
+		TrackerMarker = X2Action_MarkerNamed(class'X2Action_MarkerNamed'.static.AddToVisualizationTree(ActionMetadata, FirstExitCoverAction.StateChangeContext, , FirstExitCoverAction));
+		TrackerMarker.SetName("SequentialShotTracker");
+		WaitAction = X2Action_WaitForAnotherAction(class'X2Action_WaitForAnotherAction'.static.AddToVisualizationTree(ActionMetadata, FirstExitCoverAction.StateChangeContext, , TrackerMarker));
+	}
+	else
+	{
+		arrActions = TrackerMarker.ChildActions;
+		for (i = 0; i < arrActions.Length; ++i)
+		{
+			WaitAction = X2Action_WaitForAnotherAction(arrActions[i]);
+			if (WaitAction != none)
+				break;
+		}
+		`assert(WaitAction != none);		//	should have been created along with the marker action
+	}
+
+	WaitAction.ActionToWaitFor = LastEnterCoverAction;
+}
+
+function SharedAnimation_MergeVisualization(X2Action BuildTree, out X2Action VisualizationTree)
+{
+	local XComGameStateVisualizationMgr VisMgr;
+	local X2Action_MarkerNamed MarkerNamed, JoinMarker, SecondJoin, FireReplace;
+	local array<X2Action> arrActions;
+	local X2Action Action, FirstFireAction, SecondFireAction, SpacerAction;// EnterAction, ExitAction;
+	local int i, iBestHistoryIndex;
+	local VisualizationActionMetadata ActionMetadata;
+	local XComGameStateContext_Ability AbilityContext, FirstAbilityContext, SecondAbilityContext;//, ProxyAbilityContext;
+	local AbilityInputContext InputContext, TestContext;
+	local StateObjectReference Source, Target;
+	local name FirstAbilityName;
+
+	VisMgr = `XCOMVISUALIZATIONMGR;
+
+	SecondFireAction = VisMgr.GetNodeOfType(BuildTree, class'X2Action_Fire');
+	SecondAbilityContext=XComGameStateContext_Ability(BuildTree.StateChangeContext);
+	InputContext=SecondAbilityContext.InputContext;
+	FirstAbilityName=name(Repl(InputContext.AbilityTemplateName, "Secondary", ""));
+	Source=InputContext.SourceObject;
+	Target=InputContext.PrimaryTarget;
+	`log(`showvar(InputContext.AbilityTemplateName));
+	`log(`showvar(FirstAbilityName));
+	//Mr. Nice with possible overwatch in the runup of pistolwhip, muton counterattacks etc, the VisTree
+	//may be messier then you think! Careful to find right X2Action_Fire by matching abilityname, source & target
+	VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_Fire', arrActions, , , true);
+	`log(`showvar(arrActions.Length));
+	iBestHistoryIndex = -1;
+	foreach arrActions(Action)
+	{
+		AbilityContext=XComGameStateContext_Ability(Action.StateChangeContext);
+		TestContext=AbilityContext.InputContext;
+		if (TestContext.AbilityTemplateName==FirstAbilityName
+			&& TestContext.PrimaryTarget==Target
+			&& TestContext.SourceObject==Source
+			&& (FirstFireAction==none || AbilityContext.AssociatedState.HistoryIndex > iBestHistoryIndex))
+		{
+			FirstFireAction=Action;
+			FirstAbilityContext=AbilityContext;
+			iBestHistoryIndex=AbilityContext.AssociatedState.HistoryIndex;
+		}
+	}
+
+	if (FirstFireAction == none || SecondFireAction==none)
+	{
+		//Mr. Nice: If this happens who knows what's going on? Just keep VisMgr happy with the most generic merge...
+		XComGameStateContext_Ability(BuildTree.StateChangeContext).SuperMergeIntoVisualizationTree(BuildTree, VisualizationTree);
+		return;
+	}
+	
+	VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_MarkerNamed', arrActions, , , true);
+	for (i = 0; i < arrActions.Length; ++i)
+	{
+		MarkerNamed = X2Action_MarkerNamed(arrActions[i]);
+		if (MarkerNamed.MarkerName == 'Join' && MarkerNamed.StateChangeContext.AssociatedState.HistoryIndex == iBestHistoryIndex)
+		{
+			JoinMarker = MarkerNamed;
+			break;
+		}
+	}
+
+	`assert(JoinMarker != none);
+	
+	VisMgr.GetNodesOfType(BuildTree, class'X2Action_MarkerNamed', arrActions, , , true);
+	for (i = 0; i < arrActions.Length; ++i)
+	{
+		MarkerNamed = X2Action_MarkerNamed(arrActions[i]);
+		if (MarkerNamed.MarkerName == 'Join')
+		{
+			SecondJoin = MarkerNamed;
+		}
+	}
+
+	//Mr. Nice: If Second hit misses animate first hit, otherwise animate second hit
+	//Means that if we kill on the second shot, we correctly get the death anim
+	//Well, that was the theory, but hiding hits is hard, and if you hide the first one, you don't get the projectile blood
+	if(IsContextMiss(SecondAbilityContext))
+	{
+		VisMgr.GetNodesOfType(BuildTree, class'X2Action_ApplyWeaponDamageToUnit', arrActions,, Target.ObjectID);
+		foreach arrActions(Action)
+		{
+			if(Action.ParentActions[0]==SecondFireAction)
+			{
+				X2Action_ApplyWeaponDamageToUnit(Action).bPlayDamageAnim=false;
+			}
+		}
+	}
+	else
+	{
+		VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_ApplyWeaponDamageToUnit', arrActions,, Target.ObjectID);
+		if (IsContextMiss(FirstAbilityContext))
+		{
+			foreach arrActions(Action)
+			{
+				if(Action.ParentActions[0]==FirstFireAction)
+				{
+					X2Action_ApplyWeaponDamageToUnit(Action).bPlayDamageAnim=false;
+				}
+			}
+		}
+		
+		//Mr. Nice: This makes sure you can see the counter, whether the second shot kills them or not
+		else if(FirstAbilityContext.ResultContext.HitResult==eHit_CounterAttack)
+		{
+			foreach arrActions(Action)
+			{
+				if (Action.ParentActions[0]==FirstFireAction)
+				{
+					`log("Found miss/counter action...");
+					if(XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(Target.ObjectID,, SecondAbilityContext.AssociatedState.HistoryIndex)).IsDead())
+					{
+						//Mr. Nice: If the second hit kills, stil want to show the counter animation before the unit animates its death
+						SpacerAction=Action;
+					}
+					else
+					{
+						
+						//Mr. Nice: If the second hit does not kill, want the counter animation, not the flinch animation, to get priority
+						//Spacer both keeps the sets of damageotunit's from being siblings if both miss,
+						//and helpfully makes sure you see the counter anim, not the flinch anim when you have a counter & hit result
+						ActionMetaData=FirstFireAction.Metadata;
+						SpacerAction=class'X2Action_ApplyDamageSpacer'.static.AddToVisualizationTree(ActionMetadata, FirstAbilityContext,, FirstFireAction);
+						VisMgr.DisconnectAction(Action);
+						VisMgr.ConnectAction(Action, VisualizationTree,, SpacerAction);
+						SpacerAction=FirstFireAction;
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	//If the second shot has a join created, then just slot it in above the first shots join
+	if (SecondJoin!=none)
+	{
+		VisMgr.ConnectAction(SecondJoin, VisualizationTree,,, JoinMarker.ParentActions);
+		VisMgr.ConnectAction(JoinMarker, BuildTree,, SecondJoin);
+	}
+	//If the second shot does not have a join, then connect the leaf nodes to the first shots join
+	else
+	{
+		VisMgr.GetAllLeafNodes(BuildTree, arrActions);
+		VisMgr.ConnectAction(JoinMarker,BuildTree,,, arrActions);
+	}
+	//Mr. Nice, ok, want to connect children of secondfireaction, to firstfireaction
+	arrActions=SecondFireAction.ChildActions;
+	//If first hit was countered, then the attachment point for second hit applydamagetounit will have been set
+	//Otherwise, create a new SpacerAction for them
+	if (SpacerAction==none)
+	{
+		ActionMetaData=SecondFireAction.Metadata;
+		SpacerAction=class'X2Action_ApplyDamageSpacer'.static.AddToVisualizationTree(ActionMetadata, SecondAbilityContext,, FirstFireAction);
+	}
+	`log(`showvar(arrActions.Length));
+	foreach arrActions(Action)
+	{
+		//MakeIntoLeaf(Action, BuildTree);
+		//VisMgr.DisconnectAction(Action);
+		VisMgr.ConnectAction(Action, VisualizationTree,, X2Action_ApplyWeaponDamageToUnit(Action)!=none ? SpacerAction : FirstFireAction);
+	}
+	//For correct counter attack animations, need to be able to trace from BuildTree down to the second shots apply damages, without
+	//encountering the first shot's applydamages. So swap out the SecondFireAction for a marker, just to keep BuildTree traceable.
+	FireReplace = X2Action_MarkerNamed(class'X2Action'.static.CreateVisualizationActionClass(class'X2Action_MarkerNamed', SecondAbilityContext));
+	FireReplace.SetName("FireActionSharedAnimStub");
+	VisMgr.ReplaceNode(FireReplace, SecondFireAction);	
+	//VisMgr.ConnectAction(FirstFireAction, BuildTree,,, SecondFireAction.ParentActions);
+	//Mr. Nice we have swapped out the SecondFireAction,
+	//So can destroy it now without "stranding" any other actions
+	VisMgr.DestroyAction(SecondFireAction);
+	//VisMgr.ConnectAction(MarkerStart, VisualizationTree,, FirstMarkerStart);
+}
+
+//Mr. Nice: Just AbilityContext.IsResultContextHit() isn't good enough, since Unload multitargets
+//The primary target, so have to check the multitarget results too
+//Also, for animation purposes we want to treat a counterattack result as a hit, not miss
+static function bool IsContextMiss(XComGameStateContext_Ability AbilityContext)
+{
+	local int MultiIndex;
+
+	if (AbilityContext.IsResultContextHit() || AbilityContext.ResultContext.HitResult==eHit_CounterAttack)
+	{
+		return false;
+	}
+		
+	for (MultiIndex = 0; MultiIndex < AbilityContext.InputContext.MultiTargets.Length; ++MultiIndex)
+	{
+		if (AbilityContext.IsResultContextMultiHit(MultiIndex))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+// Curtesy of Cinematic Rapid Fire
+static function MakeIntoLeaf(X2Action Action, out X2Action Tree)
+{
+	local array<X2Action> ParentActions, ChildActions;
+	local X2Action ChildAction;
+	local XComGameStateVisualizationMgr VisMgr;
+
+	VisMgr = `XCOMVISUALIZATIONMGR;
+	ChildActions=Action.ChildActions;
+	foreach ChildActions(ChildAction)
+	{
+		ParentActions=ChildAction.ParentActions;
+		ParentActions.RemoveItem(Action);
+		VisMgr.DisconnectAction(ChildAction);
+		VisMgr.ConnectAction(ChildAction, Tree,,, ParentActions);
+		VisMgr.ConnectAction(ChildAction, Tree,,, Action.ParentActions);
+	}
+}
+
 // This is Musashi-san's code <3 <3 <3
 function MergeVisualization(X2Action BuildTree, out X2Action VisualizationTree)
 {
 	local XComGameStateVisualizationMgr VisMgr;
 	local X2Action_ApplyWeaponDamageToUnit MarkerStart;
 	local X2Action_Fire FoundEndMarker;
-	
+	local array<X2Action> arrActions;
+	local X2Action Action;
+
 	VisMgr = `XCOMVISUALIZATIONMGR;
 
 	MarkerStart = X2Action_ApplyWeaponDamageToUnit(VisMgr.GetNodeOfType(BuildTree, class'X2Action_ApplyWeaponDamageToUnit'));

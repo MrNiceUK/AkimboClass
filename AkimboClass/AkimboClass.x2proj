@@ -67,6 +67,9 @@ tags=soldier class, Wot, War of the Chosen, Dual Wield Pistols, Akimbo, Gun Fu</
     <Content Include="Src\AkimboClass\Classes\X2Ability_AkimboAbilitySet2.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\AkimboClass\Classes\X2Action_ApplyDamageSpacer.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\AkimboClass\Classes\X2Action_DelayedFireAction.uc">
       <SubType>Content</SubType>
     </Content>
