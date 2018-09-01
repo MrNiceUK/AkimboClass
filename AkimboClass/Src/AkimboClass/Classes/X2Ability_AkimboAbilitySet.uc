@@ -2390,104 +2390,6 @@ static function bool PistolWhipDamagePreview(XComGameState_Ability AbilityState,
 }
 
 
-simulated function SequentialShot_MergeVisualization(X2Action BuildTree, out X2Action VisualizationTree)
-{
-	local XComGameStateVisualizationMgr VisMgr;
-	local Array<X2Action> arrActions;
-	local X2Action_MarkerTreeInsertBegin MarkerStart;
-	local X2Action_MarkerNamed MarkerNamed, JoinMarker, TrackerMarker;
-	local X2Action_ExitCover ExitCoverAction, FirstExitCoverAction;
-	local X2Action_EnterCover EnterCoverAction, LastEnterCoverAction;
-	local X2Action_WaitForAnotherAction WaitAction;
-	local VisualizationActionMetadata ActionMetadata;
-	local int i;
-	// Variable for Issue #20
-	local int iBestHistoryIndex;
-
-	VisMgr = `XCOMVISUALIZATIONMGR;
-	MarkerStart = X2Action_MarkerTreeInsertBegin(VisMgr.GetNodeOfType(BuildTree, class'X2Action_MarkerTreeInsertBegin'));
-	// Start Issue #20
-	// This function breaks 3+ subsequent shots. Somehow, the actions filled out by GetNodesOfType are sorted so that our
-	// "get the last join marker" actually sometimes finds us the FIRST join marker. This causes all these shot contexts to
-	// try and visualize themselves alongside each other, which is definitely not intended.
-	// Further investigations made it seem that the additional parameter bSortByHistoryIndex=true does not seem to have the desired effect
-	// but generally push it *somewhat* in the right direction
-	VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_MarkerNamed', arrActions, , , true);
-	// End Issue #20
-
-	//	get the last Join marker
-	// Start Issue #20
-	// GetNodesOfType() does not seem to produce a consistent ordering
-	// We will just manually get the "latest" one by comparing history indices
-	iBestHistoryIndex = -1;
-	for (i = 0; i < arrActions.Length; ++i)
-	{
-		MarkerNamed = X2Action_MarkerNamed(arrActions[i]);
-		if (MarkerNamed.MarkerName == 'Join' && (JoinMarker == None || MarkerNamed.StateChangeContext.AssociatedState.HistoryIndex > iBestHistoryIndex))
-		{
-			iBestHistoryIndex = MarkerNamed.StateChangeContext.AssociatedState.HistoryIndex;
-			// End Issue #20
-			JoinMarker = MarkerNamed;
-		}
-		else if (MarkerNamed.MarkerName == 'SequentialShotTracker')
-		{
-			TrackerMarker = MarkerNamed;
-		}
-		// Comment out for Issue #20
-		// We can't bail out early because we may need to compare more join markers :(
-		//if (JoinMarker != none && TrackerMarker != none)
-		//	break;
-	}
-
-	`assert(JoinMarker != none);
-
-	//	all other enter cover actions need to skip entering cover	
-	VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_EnterCover', arrActions);
-	for (i = 0; i < arrActions.Length; ++i)
-	{
-		//	@TODO - Ideally we need to check our ExitCover action to see if the step out it wants (from our original
-		//			location) is different from the previous ExitCover, in which case we'd need to go ahead
-		//			and allow the EnterCover to run, as well as not skip our ExitCover.
-
-		EnterCoverAction = X2Action_EnterCover(arrActions[i]);
-		EnterCoverAction.bSkipEnterCover = true;
-	}
-	LastEnterCoverAction = X2Action_EnterCover(VisMgr.GetNodeOfType(BuildTree, class'X2Action_EnterCover'));
-
-	//	have our exit cover not visualize since the unit is already out from the first shot
-	ExitCoverAction = X2Action_ExitCover(VisMgr.GetNodeOfType(BuildTree, class'X2Action_ExitCover'));
-	ExitCoverAction.bSkipExitCoverVisualization = true;
-
-	VisMgr.ConnectAction(MarkerStart, VisualizationTree, true, JoinMarker);
-	
-	//	now we have to make sure there's a wait parented to the first exit cover, which waits for the last enter cover
-	//	this will prevent the idle state machine from taking over and putting the unit back in cover
-		
-	if (TrackerMarker == none)
-	{
-		VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_ExitCover', arrActions);
-		FirstExitCoverAction = X2Action_ExitCover(arrActions[0]);
-		`assert(FirstExitCoverAction != none);
-		ActionMetadata = FirstExitCoverAction.Metadata;
-		TrackerMarker = X2Action_MarkerNamed(class'X2Action_MarkerNamed'.static.AddToVisualizationTree(ActionMetadata, FirstExitCoverAction.StateChangeContext, , FirstExitCoverAction));
-		TrackerMarker.SetName("SequentialShotTracker");
-		WaitAction = X2Action_WaitForAnotherAction(class'X2Action_WaitForAnotherAction'.static.AddToVisualizationTree(ActionMetadata, FirstExitCoverAction.StateChangeContext, , TrackerMarker));
-	}
-	else
-	{
-		arrActions = TrackerMarker.ChildActions;
-		for (i = 0; i < arrActions.Length; ++i)
-		{
-			WaitAction = X2Action_WaitForAnotherAction(arrActions[i]);
-			if (WaitAction != none)
-				break;
-		}
-		`assert(WaitAction != none);		//	should have been created along with the marker action
-	}
-
-	WaitAction.ActionToWaitFor = LastEnterCoverAction;
-}
-
 function SharedAnimation_MergeVisualization(X2Action BuildTree, out X2Action VisualizationTree)
 {
 	local XComGameStateVisualizationMgr VisMgr;
@@ -2509,12 +2411,9 @@ function SharedAnimation_MergeVisualization(X2Action BuildTree, out X2Action Vis
 	FirstAbilityName=name(Repl(InputContext.AbilityTemplateName, "Secondary", ""));
 	Source=InputContext.SourceObject;
 	Target=InputContext.PrimaryTarget;
-	`log(`showvar(InputContext.AbilityTemplateName));
-	`log(`showvar(FirstAbilityName));
 	//Mr. Nice with possible overwatch in the runup of pistolwhip, muton counterattacks etc, the VisTree
 	//may be messier then you think! Careful to find right X2Action_Fire by matching abilityname, source & target
 	VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_Fire', arrActions, , , true);
-	`log(`showvar(arrActions.Length));
 	iBestHistoryIndex = -1;
 	foreach arrActions(Action)
 	{
