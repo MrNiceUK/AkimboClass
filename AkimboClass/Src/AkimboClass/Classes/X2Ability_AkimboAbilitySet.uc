@@ -1271,7 +1271,6 @@ static function X2AbilityTemplate Create_DP_CQCSupremacyAttack()
 
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
 	X2AbilityToHitCalc_DPMelee(Template.AbilityToHitCalc).bReactionFire = true;
-	Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 	//  trigger on movement
 	/*
 	Trigger = new class'X2AbilityTrigger_EventListener';
@@ -2180,7 +2179,11 @@ static function X2AbilityTemplate PistolWhip(name TemplateName, string Hand)
 	Template.AbilitySourceName = 'eAbilitySource_Perk';
 	Template.Hostility = eHostility_Offensive;
 
-	Template.bSkipExitCoverWhenFiring  = true;
+	//Mr. Nice: little ***** was causing those flinches, technically what's happening is that the idlestatemachine is getting to takeover the unit early
+	//Once there's no currently executing actions from the same historyindex as the exitcover. Skipping still puts in an exitcover action which handles
+	//Unit facing still, but there's no matching enter cover to stop the idlestatemachine taking over once the fireaction is done...
+	//Which makes units flinch at anything interesting going on nearby it seems.
+	//Template.bSkipExitCoverWhenFiring  = true;
 	
 	Template.AbilityConfirmSound = "TacticalUI_SwordConfirm";
 	Template.SourceMissSpeech = 'SwordMiss';
@@ -2255,7 +2258,7 @@ static function X2AbilityTemplate PistolWhip(name TemplateName, string Hand)
 		//Don't skip the fire action, we want it to anchor the applydamage actions
 		//Do skip exitcover & perk
 		//Template.bSkipFireAction = true;
-		Template.bSkipExitCoverWhenFiring = true;
+		//Template.bSkipExitCoverWhenFiring = true;
 		Template.bSkipPerkActivationActions=true;
 		Template.bShowActivation = false;
 	}
@@ -2471,7 +2474,7 @@ function SharedAnimation_MergeVisualization(X2Action BuildTree, out X2Action Vis
 	local XComGameStateVisualizationMgr VisMgr;
 	local X2Action_MarkerNamed MarkerNamed, JoinMarker, SecondJoin, FireReplace;
 	local array<X2Action> arrActions;
-	local X2Action Action, FirstFireAction, SecondFireAction, SpacerAction;// EnterAction, ExitAction;
+	local X2Action Action, FirstFireAction, SecondFireAction, SpacerAction, EnterAction, ExitAction;
 	local int i, iBestHistoryIndex;
 	local VisualizationActionMetadata ActionMetadata;
 	local XComGameStateContext_Ability AbilityContext, FirstAbilityContext, SecondAbilityContext;//, ProxyAbilityContext;
@@ -2489,6 +2492,7 @@ function SharedAnimation_MergeVisualization(X2Action BuildTree, out X2Action Vis
 	Target=InputContext.PrimaryTarget;
 	//Mr. Nice with possible overwatch in the runup of pistolwhip, muton counterattacks etc, the VisTree
 	//may be messier then you think! Careful to find right X2Action_Fire by matching abilityname, source & target
+	//abilityname alone would be ok 99% of the time probably, but why not check all 3?
 	VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_Fire', arrActions, , , true);
 	iBestHistoryIndex = -1;
 	foreach arrActions(Action)
@@ -2509,10 +2513,11 @@ function SharedAnimation_MergeVisualization(X2Action BuildTree, out X2Action Vis
 	if (FirstFireAction == none || SecondFireAction==none)
 	{
 		//Mr. Nice: If this happens who knows what's going on? Just keep VisMgr happy with the most generic merge...
+		//Normal SequentialShot_MergeVisualization assumes that the merging action has enter/exit cover, so can't use it.
 		XComGameStateContext_Ability(BuildTree.StateChangeContext).SuperMergeIntoVisualizationTree(BuildTree, VisualizationTree);
 		return;
 	}
-	
+
 	VisMgr.GetNodesOfType(VisualizationTree, class'X2Action_MarkerNamed', arrActions, , , true);
 	for (i = 0; i < arrActions.Length; ++i)
 	{
@@ -2549,6 +2554,8 @@ function SharedAnimation_MergeVisualization(X2Action BuildTree, out X2Action Vis
 				X2Action_ApplyWeaponDamageToUnit(Action).bPlayDamageAnim=false;
 			}
 		}
+		ActionMetaData=SecondFireAction.Metadata;
+		SpacerAction=class'X2Action_ApplyDamageSpacer'.static.AddToVisualizationTree(ActionMetadata, SecondAbilityContext,, FirstFireAction);
 	}
 	else
 	{
@@ -2613,8 +2620,9 @@ function SharedAnimation_MergeVisualization(X2Action BuildTree, out X2Action Vis
 	//Otherwise, create a new SpacerAction for them
 	if (SpacerAction==none)
 	{
-		ActionMetaData=SecondFireAction.Metadata;
-		SpacerAction=class'X2Action_ApplyDamageSpacer'.static.AddToVisualizationTree(ActionMetadata, SecondAbilityContext,, FirstFireAction);
+		SpacerAction=FirstFireAction;
+		//ActionMetaData=SecondFireAction.Metadata;
+		//SpacerAction=class'X2Action_ApplyDamageSpacer'.static.AddToVisualizationTree(ActionMetadata, SecondAbilityContext,, FirstFireAction);
 	}
 	//`log(`showvar(arrActions.Length));
 	foreach arrActions(Action)
