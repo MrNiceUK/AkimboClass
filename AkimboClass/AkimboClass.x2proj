@@ -9,6 +9,7 @@ tags=soldier class, Wot, War of the Chosen, Dual Wield Pistols, Akimbo, Gun Fu</
     <SteamPublishID>0</SteamPublishID>
     <AssemblyName>AkimboClass</AssemblyName>
     <RootNamespace>AkimboClass</RootNamespace>
+    <ProjectGuid>{7b578253-f20a-49ae-bd36-30b3786d2b13}</ProjectGuid>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Config\" />
@@ -44,6 +45,12 @@ tags=soldier class, Wot, War of the Chosen, Dual Wield Pistols, Akimbo, Gun Fu</
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\SoundSpeechIridar.int">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\SoundSpeechIridar.rus">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\XComGame.rus">
       <SubType>Content</SubType>
     </Content>
     <Content Include="ReadMe.txt" />
@@ -94,7 +101,7 @@ tags=soldier class, Wot, War of the Chosen, Dual Wield Pistols, Akimbo, Gun Fu</
     <Content Include="Src\AkimboClass\Classes\X2Condition_DP_TrickShot.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\AkimboClass\Classes\X2Condition_OverwatchPacer.uc">
+    <Content Include="Src\AkimboClass\Classes\X2Condition_EnemyIsLost.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\AkimboClass\Classes\X2DownloadableContentInfo_AkimboClass.uc" />
@@ -132,9 +139,6 @@ tags=soldier class, Wot, War of the Chosen, Dual Wield Pistols, Akimbo, Gun Fu</
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\AkimboClass\Classes\X2Effect_ForceDodge.uc">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Src\AkimboClass\Classes\X2Effect_OverwatchPacer.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\AkimboClass\Classes\X2Effect_TrickShot_AimModifier.uc">

@@ -29,41 +29,66 @@ static function EventListenerReturn OnOverrideFocus(Object EventData, Object Eve
 	local XComLWTuple Tuple;
 	local int ReservedAP, MaxAP;
 	local string TooltipLong, TooltipShort, Icon;
+	local UnitValue LimitBreakActions;
+	local string BarColor;
+
+	BarColor = "0x0264ab"; //Navy blue is the default color for Gun Kata 
 
 	Tuple = XComLWTuple(EventData);
 	UnitState = XComGameState_Unit(EventSource);
 
-	if (UnitState.GetSoldierClassTemplateName() == 'Akimbo')
+	//doing the class / effect checks to ensure compatibility with AWC and RPGO, while not cluttering UI for other classes.
+	if (UnitState.GetSoldierClassTemplateName() == 'Akimbo' || UnitState.HasSoldierAbility('DP_DualPistols') || UnitState.IsUnitAffectedByEffectName(class'X2Effect_DP_LimitBreak'.default.EffectName))
 	{
-		ReservedAP = UnitState.NumReserveActionPoints('overwatch');
+		if(UnitState.IsUnitAffectedByEffectName(class'X2Effect_DP_LimitBreak'.default.EffectName))
+		{
+			UnitState.GetUnitValue(class'X2Effect_DP_LimitBreak'.default.BonusActionsValue, LimitBreakActions);
+			ReservedAP = LimitBreakActions.fValue;
+			MaxAP = class'X2Ability_AkimboAbilitySet'.default.ConsciousChance.Length - 1;
+
+			TooltipLong = "Limit Break actions taken.";
+			TooltipShort = "Limit Break";
+			Icon = "img:///WP_Akimbo.UIIcons.LimitBreakStatus";
+
+			BarColor = "0xdbaf00";
+			if (ReservedAP == class'X2Effect_DP_LimitBreak'.default.LIMIT_BREAK_ACTIONS_BEFORE_DAMAGE) BarColor = "0xdc6b10";
+			if (ReservedAP > class'X2Effect_DP_LimitBreak'.default.LIMIT_BREAK_ACTIONS_BEFORE_DAMAGE) BarColor = "0xff0000";
+		}
+		else
+		{
+			ReservedAP = UnitState.NumReserveActionPoints('overwatch');
+
+			MaxAP = 2;
+			if (UnitState.HasSoldierAbility('DP_GunKata_Active')) 
+			{
+				MaxAP += 2;
+				TooltipLong = "Gun Kata Action Points remaining.";
+				TooltipShort = "Gun Kata";
+				Icon = "img:///WP_Akimbo.UIIcons.FocusMeterIcon32Blue100";
+			}
+			else
+			{
+				TooltipLong = "Dual Overwatch Shots remaining.";
+				TooltipShort = "Dual Overwatch";
+				Icon = "img:///WP_Akimbo.UIIcons.DualOverwatchStatus";
+			}
+
+			if (UnitState.HasSoldierAbility('DP_Quicksilver')) MaxAP *= 2;
+		}
+
 		if (ReservedAP == 0)
 		{
 			Tuple.Data[0].b = false;
 			return ELR_NoInterrupt;
 		}
 
-		MaxAP = 2;
-		if (UnitState.HasSoldierAbility('DP_GunKata_Active')) 
-		{
-			MaxAP += 2;
-			TooltipLong = "Gun Kata Action Points remaining.";
-			TooltipShort = "Gun Kata";
-			Icon = "img:///WP_Akimbo.UIIcons.FocusMeterIcon32Blue100";
-		}
-		else
-		{
-			TooltipLong = "Dual Overwatch Shots remaining.";
-			TooltipShort = "Dual Overwatch";
-			Icon = "img:///WP_Akimbo.UIIcons.DualOverwatchStatus";
-		}
 
-		if (UnitState.HasSoldierAbility('DP_Quicksilver')) MaxAP *= 2;
 		if (ReservedAP > MaxAP) MaxAP = ReservedAP;	//in case a reserved action point is granted by threat assessment or something
 
 		Tuple.Data[0].b = true;
 		Tuple.Data[1].i = ReservedAP;
 		Tuple.Data[2].i = MaxAP;
-		Tuple.Data[3].s = "0x0264ab";
+		Tuple.Data[3].s = BarColor;
 		Tuple.Data[4].s = Icon;
 		Tuple.Data[5].s = TooltipLong;
 		Tuple.Data[6].s = TooltipShort;

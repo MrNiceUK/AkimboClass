@@ -29,4 +29,3 @@ DefaultProperties
 	OutputEventIDs.Add( "Visualizer_AbilityHit" )
 	OutputEventIDs.Add( "Visualizer_ProjectileHit" )
 }
-

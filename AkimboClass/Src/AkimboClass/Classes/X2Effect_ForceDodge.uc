@@ -22,7 +22,7 @@ function bool ChangeHitResultForTarget(XComGameState_Effect EffectState, XComGam
 
 	if(TargetUnit.IsAbleToAct())	//I assume this checks our soldier isn't stunned / bound / etc
 	{
-		//trigger a spinning reload when getting shot. it will go through only if the soldier has 0 ammo.
+		//trigger a spinning reload when getting shot. it will go through only if the soldier has 0 ammo. ADDED: Perhaps this should come after a dodge?.. since we no longer check how many AP soldier has
 		`XEVENTMGR.TriggerEvent('DP_SpinningReload_Reactive', TargetUnit, TargetUnit); 
 	
 		//reset Overwatch Pacer so that soldier can take an overwatch right away
