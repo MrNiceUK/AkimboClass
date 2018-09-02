@@ -2258,7 +2258,7 @@ static function X2AbilityTemplate PistolWhip(name TemplateName, string Hand)
 		//Don't skip the fire action, we want it to anchor the applydamage actions
 		//Do skip exitcover & perk
 		//Template.bSkipFireAction = true;
-		//Template.bSkipExitCoverWhenFiring = true;
+		Template.bSkipExitCoverWhenFiring = true;
 		Template.bSkipPerkActivationActions=true;
 		Template.bShowActivation = false;
 	}
@@ -2474,7 +2474,7 @@ function SharedAnimation_MergeVisualization(X2Action BuildTree, out X2Action Vis
 	local XComGameStateVisualizationMgr VisMgr;
 	local X2Action_MarkerNamed MarkerNamed, JoinMarker, SecondJoin, FireReplace;
 	local array<X2Action> arrActions;
-	local X2Action Action, FirstFireAction, SecondFireAction, SpacerAction, EnterAction, ExitAction;
+	local X2Action Action, FirstFireAction, SecondFireAction, SpacerAction;// EnterAction, ExitAction;
 	local int i, iBestHistoryIndex;
 	local VisualizationActionMetadata ActionMetadata;
 	local XComGameStateContext_Ability AbilityContext, FirstAbilityContext, SecondAbilityContext;//, ProxyAbilityContext;
