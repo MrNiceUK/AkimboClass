@@ -2620,11 +2620,9 @@ function SharedAnimation_MergeVisualization(X2Action BuildTree, out X2Action Vis
 	//Otherwise, create a new SpacerAction for them
 	if (SpacerAction==none)
 	{
-		SpacerAction=FirstFireAction;
-		//ActionMetaData=SecondFireAction.Metadata;
-		//SpacerAction=class'X2Action_ApplyDamageSpacer'.static.AddToVisualizationTree(ActionMetadata, SecondAbilityContext,, FirstFireAction);
+		ActionMetaData=SecondFireAction.Metadata;
+		SpacerAction=class'X2Action_ApplyDamageSpacer'.static.AddToVisualizationTree(ActionMetadata, SecondAbilityContext,, FirstFireAction);
 	}
-	//`log(`showvar(arrActions.Length));
 	foreach arrActions(Action)
 	{
 		//MakeIntoLeaf(Action, BuildTree);
